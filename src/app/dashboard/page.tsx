@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { 
   TrendingUp, 
@@ -12,52 +12,134 @@ import {
   Plus,
   ArrowUpRight,
   Bot,
-  DollarSign
+  DollarSign,
+  Loader2,
+  Inbox
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
+
+interface ActivityItem {
+  id: string;
+  type: "invoice" | "quote" | "contract";
+  title: string;
+  client: string;
+  amount: number;
+  status: string;
+  date: string;
+  statusColor: string;
+}
 
 export default function DashboardPage() {
-  // Données initiales du tableau de bord
-  const stats = {
-    totalInvoiced: 480000,
-    totalCollected: 330000,
-    pendingInvoices: 150000,
-    activeContracts: 2,
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalInvoiced: 0,
+    totalCollected: 0,
+    pendingInvoices: 0,
+    activeContracts: 0,
     currency: "XOF",
-  };
+  });
+  const [recentActivities, setRecentActivities] = useState<ActivityItem[]>([]);
 
-  const recentActivities = [
-    {
-      id: "act-1",
-      type: "invoice",
-      title: "Facture FACT-2024-001 encaissée",
-      client: "BioSaveurs Afrique",
-      amount: 150000,
-      status: "Payé (Vérifié)",
-      date: "14 Oct 2024",
-      statusColor: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    },
-    {
-      id: "act-2",
-      type: "quote",
-      title: "Devis DEVIS-2024-003 envoyé",
-      client: "AgroBénin SARL",
-      amount: 350000,
-      status: "En attente",
-      date: "12 Oct 2024",
-      statusColor: "bg-amber-50 text-amber-700 border-amber-200",
-    },
-    {
-      id: "act-3",
-      type: "contract",
-      title: "Mission 'Charte Graphique' en cours",
-      client: "BioSaveurs Afrique",
-      amount: 150000,
-      status: "En cours",
-      date: "10 Oct 2024",
-      statusColor: "bg-blue-50 text-blue-700 border-blue-200",
-    },
-  ];
+  useEffect(() => {
+    async function loadDashboardData() {
+      try {
+        const supabase = createClient();
+        const { data: userData } = await supabase.auth.getUser();
+
+        if (!userData?.user) {
+          setLoading(false);
+          return;
+        }
+
+        const userId = userData.user.id;
+
+        // 1. Récupération des factures réelles de l'utilisateur
+        const { data: invoices } = await supabase
+          .from("invoices")
+          .select("id, invoice_number, client_name, total_ttc, status, issue_date")
+          .eq("entrepreneur_id", userId)
+          .order("created_at", { ascending: false });
+
+        // 2. Récupération des devis réels de l'utilisateur
+        const { data: quotes } = await supabase
+          .from("quotes")
+          .select("id, quote_number, client_name, total_ttc, status, created_at")
+          .eq("entrepreneur_id", userId)
+          .order("created_at", { ascending: false });
+
+        // 3. Récupération des contrats réels
+        const { data: contracts } = await supabase
+          .from("contracts")
+          .select("id, status")
+          .eq("freelancer_id", userId);
+
+        let totalInvoiced = 0;
+        let totalCollected = 0;
+        let pendingInvoices = 0;
+
+        const activities: ActivityItem[] = [];
+
+        if (invoices && invoices.length > 0) {
+          invoices.forEach((inv: any) => {
+            const amount = Number(inv.total_ttc) || 0;
+            totalInvoiced += amount;
+
+            if (inv.status === "paid" || inv.status === "paid_verified") {
+              totalCollected += amount;
+            } else if (inv.status === "sent" || inv.status === "pending") {
+              pendingInvoices += amount;
+            }
+
+            activities.push({
+              id: inv.id,
+              type: "invoice",
+              title: `Facture ${inv.invoice_number}`,
+              client: inv.client_name,
+              amount: amount,
+              status: inv.status === "paid" ? "Payé (Vérifié)" : inv.status === "sent" ? "Envoyée" : "En attente",
+              date: new Date(inv.issue_date || Date.now()).toLocaleDateString("fr-FR"),
+              statusColor: inv.status === "paid" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200",
+            });
+          });
+        }
+
+        if (quotes && quotes.length > 0) {
+          quotes.forEach((q: any) => {
+            const amount = Number(q.total_ttc) || 0;
+            activities.push({
+              id: q.id,
+              type: "quote",
+              title: `Devis ${q.quote_number}`,
+              client: q.client_name,
+              amount: amount,
+              status: q.status === "accepted" ? "Accepté" : q.status === "sent" ? "Envoyé" : "Brouillon",
+              date: new Date(q.created_at).toLocaleDateString("fr-FR"),
+              statusColor: q.status === "accepted" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-blue-50 text-blue-700 border-blue-200",
+            });
+          });
+        }
+
+        const activeContracts = (contracts || []).filter((c: any) => c.status === "active").length;
+
+        setStats({
+          totalInvoiced,
+          totalCollected,
+          pendingInvoices,
+          activeContracts,
+          currency: "XOF",
+        });
+
+        setRecentActivities(activities.slice(0, 5));
+      } catch (err) {
+        console.error("Erreur chargement données dashboard", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadDashboardData();
+  }, []);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
@@ -154,35 +236,65 @@ export default function DashboardPage() {
             </Link>
           </div>
 
-          <div className="space-y-3">
-            {recentActivities.map((act) => (
-              <div
-                key={act.id}
-                className="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50/50 transition-all text-xs"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center font-semibold">
-                    <FileText className="w-4 h-4" />
+          {loading ? (
+            <div className="py-12 text-center text-slate-400 text-xs flex items-center justify-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin text-brand-600" />
+              <span>Chargement de votre historique...</span>
+            </div>
+          ) : recentActivities.length === 0 ? (
+            <div className="py-12 text-center space-y-3">
+              <div className="w-12 h-12 bg-slate-100 text-slate-400 rounded-xl mx-auto flex items-center justify-center">
+                <Inbox className="w-6 h-6" />
+              </div>
+              <p className="text-xs font-medium text-slate-600">
+                Aucune opération ou pièce pour le moment.
+              </p>
+              <div className="flex justify-center gap-2 pt-1">
+                <Link
+                  href="/dashboard/quotes"
+                  className="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-semibold"
+                >
+                  Créer un devis
+                </Link>
+                <Link
+                  href="/missions"
+                  className="px-3 py-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-semibold"
+                >
+                  Explorer les missions
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {recentActivities.map((act) => (
+                <div
+                  key={act.id}
+                  className="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50/50 transition-all text-xs"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center font-semibold">
+                      <FileText className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-slate-900 text-sm">{act.title}</h4>
+                      <span className="text-slate-500 text-[11px]">
+                        Client : {act.client} • {act.date}
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-slate-900 text-sm">{act.title}</h4>
-                    <span className="text-slate-500 text-[11px]">
-                      Client : {act.client} • {act.date}
+
+                  <div className="text-right space-y-1">
+                    <span className="font-bold text-slate-900 block text-sm">
+                      {formatCurrency(act.amount, "XOF")}
+                    </span>
+                    <span className={`px-2 py-0.5 rounded-full border text-[10px] font-semibold ${act.statusColor}`}>
+                      {act.status}
                     </span>
                   </div>
                 </div>
-
-                <div className="text-right space-y-1">
-                  <span className="font-bold text-slate-900 block text-sm">
-                    {formatCurrency(act.amount, "XOF")}
-                  </span>
-                  <span className={`px-2 py-0.5 rounded-full border text-[10px] font-semibold ${act.statusColor}`}>
-                    {act.status}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Panneau Coach IA & Actions Rapides */}
@@ -214,11 +326,11 @@ export default function DashboardPage() {
               </div>
               <div className="flex items-center gap-2 text-slate-700">
                 <CheckCircle2 className="w-4 h-4 text-brand-600" />
-                <span>Configuration de la devise par défaut (FCFA)</span>
+                <span>Confirmation sécurisée de l'adresse e-mail</span>
               </div>
               <div className="flex items-center gap-2 text-slate-700">
                 <Clock className="w-4 h-4 text-amber-500" />
-                <span>Publication de votre première offre de service</span>
+                <span>Publication de votre première offre ou devis</span>
               </div>
             </div>
           </div>

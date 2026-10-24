@@ -74,27 +74,7 @@ export default function QuotesPage() {
           }
         }
 
-        // Devis exemples par défaut
-        setQuotes([
-          {
-            id: "q-1",
-            number: "DEV-2024-001",
-            clientName: "AgroBénin SARL",
-            date: "14 Oct 2024",
-            validUntil: "14 Nov 2024",
-            totalTTC: 350000,
-            status: "sent",
-          },
-          {
-            id: "q-2",
-            number: "DEV-2024-002",
-            clientName: "BioSaveurs Afrique",
-            date: "05 Oct 2024",
-            validUntil: "05 Nov 2024",
-            totalTTC: 150000,
-            status: "accepted",
-          }
-        ]);
+        setQuotes([]);
       } catch (err) {
         console.error("Erreur de chargement des devis", err);
       } finally {
@@ -132,6 +112,19 @@ export default function QuotesPage() {
     try {
       const supabase = createClient();
       const { data: userData } = await supabase.auth.getUser();
+
+      if (!userData?.user) {
+        alert("Veuillez vous connecter pour créer un devis.");
+        setSaving(false);
+        return;
+      }
+
+      if (!userData.user.email_confirmed_at) {
+        alert("Votre adresse e-mail doit être confirmée avant de pouvoir émettre des devis.");
+        setSaving(false);
+        window.location.href = `/auth/verify-email?email=${encodeURIComponent(userData.user.email || "")}&required=1`;
+        return;
+      }
 
       if (userData?.user) {
         // Enregistrement réel dans Supabase

@@ -93,13 +93,23 @@ export function Navbar() {
                   Publier une mission
                 </Link>
                 <Link
-                  href="/dashboard"
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 hover:border-brand-500 text-xs font-semibold text-slate-800 transition-colors"
+                  href={user.email_confirmed_at ? "/dashboard" : `/auth/verify-email?email=${encodeURIComponent(user.email || "")}&required=1`}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
+                    !user.email_confirmed_at
+                      ? "border-amber-300 bg-amber-50 text-amber-800 hover:border-amber-400"
+                      : "border-slate-200 hover:border-brand-500 text-slate-800"
+                  }`}
+                  title={!user.email_confirmed_at ? "Adresse e-mail à confirmer" : "Mon espace"}
                 >
-                  <User className="w-3.5 h-3.5 text-brand-600" />
+                  <User className={`w-3.5 h-3.5 ${!user.email_confirmed_at ? "text-amber-600" : "text-brand-600"}`} />
                   <span className="truncate max-w-[130px]">
                     {user.user_metadata?.full_name || user.email?.split("@")[0]}
                   </span>
+                  {!user.email_confirmed_at && (
+                    <span className="text-[10px] bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded-full font-bold">
+                      À valider
+                    </span>
+                  )}
                 </Link>
                 <button
                   onClick={handleSignOut}

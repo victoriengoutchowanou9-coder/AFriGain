@@ -82,39 +82,8 @@ export default function MissionsPage() {
           isDemo: false,
         }));
 
-        // Missions témoins pilotes si pas encore assez de données dans la base fraîche
-        const demoMissions: Job[] = [
-          {
-            id: "demo-1",
-            title: "Développement d'une application de gestion de stock pour boutique locale",
-            client: "AgroBénin SARL",
-            category: "dev-web-mobile",
-            budget: 350000,
-            currency: "XOF",
-            location_mode: "À distance",
-            city: "Cotonou",
-            deadline: "Dans 15 jours",
-            description: "Nous recherchons un développeur full-stack pour concevoir un outil simple d'inventaire accessible sur tablette et mobile avec alertes de réapprovisionnement.",
-            skills: ["React", "Node.js", "PostgreSQL", "Mobile-first"],
-            isDemo: true,
-          },
-          {
-            id: "demo-2",
-            title: "Création de la charte graphique et du packaging de jus de fruits naturels",
-            client: "BioSaveurs Afrique",
-            category: "design-graphique",
-            budget: 150000,
-            currency: "XOF",
-            location_mode: "Hybride",
-            city: "Calavi",
-            deadline: "Dans 10 jours",
-            description: "Conception de l'étiquette bouteille 500ml et 1L, logo rafraîchi et déclinaisons pour les réseaux sociaux de notre marque locale.",
-            skills: ["Illustrator", "Photoshop", "Packaging", "Identité Visuelle"],
-            isDemo: true,
-          },
-        ];
-
-        setJobs([...realJobs, ...demoMissions]);
+        // Uniquement les missions réelles issues de Supabase
+        setJobs(realJobs);
       } catch (err) {
         console.error("Erreur de chargement des missions", err);
       } finally {
@@ -147,6 +116,15 @@ export default function MissionsPage() {
         setAppFeedback({
           type: "error",
           text: "Veuillez vous connecter pour envoyer votre proposition.",
+        });
+        setSubmittingApp(false);
+        return;
+      }
+
+      if (!userData.user.email_confirmed_at) {
+        setAppFeedback({
+          type: "error",
+          text: "Votre adresse e-mail doit être confirmée avant de pouvoir soumettre une proposition. Veuillez vérifier votre boîte de réception.",
         });
         setSubmittingApp(false);
         return;

@@ -22,6 +22,9 @@ export default function RegisterPage() {
 
     try {
       const supabase = createClient();
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      const emailRedirectTo = `${origin}/auth/confirm?next=/dashboard`;
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -30,21 +33,31 @@ export default function RegisterPage() {
             full_name: fullName,
             role: role,
           },
+          emailRedirectTo,
         },
       });
 
       if (error) {
-        if (error.message.includes("fetch failed") || error.message.includes("placeholder") || error.message.includes("Invalid API key")) {
-          // Simulation fluide en local si le projet Supabase distant attend les clés
-          router.push("/dashboard");
-          return;
+        if (error.message.toLowerCase().includes("user already registered")) {
+          setErrorMsg("Un compte existe déjà avec cette adresse e-mail. Vous pouvez vous connecter ou demander un renvoi de lien.");
+        } else {
+          setErrorMsg(error.message);
         }
-        setErrorMsg(error.message);
-      } else {
+        return;
+      }
+
+      // Si l'inscription a réussi :
+      // Lorsque la confirmation par e-mail est activée dans Supabase, data.session est null
+      // et l'utilisateur doit impérativement confirmer son adresse.
+      if (data?.user && !data.session) {
+        router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`);
+      } else if (data?.user?.email_confirmed_at) {
         router.push("/dashboard");
+      } else {
+        router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`);
       }
     } catch (err: any) {
-      router.push("/dashboard");
+      setErrorMsg(err?.message || "Une erreur inattendue est survenue lors de l'inscription.");
     } finally {
       setLoading(false);
     }

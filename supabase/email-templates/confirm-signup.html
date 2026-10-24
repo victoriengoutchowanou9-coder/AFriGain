@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirmez votre inscription sur AFriGain</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #1e293b;
+      -webkit-font-smoothing: antialiased;
+    }
+    table {
+      border-collapse: collapse;
+    }
+    .wrapper {
+      width: 100%;
+      background-color: #f8fafc;
+      padding: 40px 16px;
+    }
+    .card {
+      max-width: 580px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 16px;
+      border: 1px solid #e2e8f0;
+      overflow: hidden;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+    .header {
+      background: linear-gradient(135deg, #15803d 0%, #16a34a 100%);
+      padding: 32px 32px 28px;
+      text-align: center;
+    }
+    .logo-badge {
+      display: inline-block;
+      width: 48px;
+      height: 48px;
+      line-height: 48px;
+      background-color: #ffffff;
+      color: #16a34a;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 22px;
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+    }
+    .brand-title {
+      color: #ffffff;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin: 0;
+    }
+    .brand-subtitle {
+      color: #bbf7d0;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-top: 4px;
+      font-weight: 600;
+    }
+    .content {
+      padding: 36px 32px;
+    }
+    .greeting {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 0;
+      margin-bottom: 16px;
+    }
+    .paragraph {
+      font-size: 14px;
+      line-height: 1.65;
+      color: #475569;
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+    .cta-container {
+      text-align: center;
+      margin: 32px 0;
+    }
+    .cta-button {
+      display: inline-block;
+      background-color: #16a34a;
+      color: #ffffff !important;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 15px;
+      padding: 14px 32px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(22, 163, 74, 0.25);
+    }
+    .info-box {
+      background-color: #f1f5f9;
+      border-left: 4px solid #16a34a;
+      padding: 14px 16px;
+      border-radius: 6px;
+      margin: 24px 0;
+      font-size: 12px;
+      color: #334155;
+      line-height: 1.5;
+    }
+    .link-fallback {
+      font-size: 11px;
+      color: #94a3b8;
+      word-break: break-all;
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid #f1f5f9;
+    }
+    .link-fallback a {
+      color: #16a34a;
+      text-decoration: underline;
+    }
+    .footer {
+      background-color: #f8fafc;
+      padding: 24px 32px;
+      text-align: center;
+      border-top: 1px solid #e2e8f0;
+      font-size: 11px;
+      color: #64748b;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="card">
+      <div class="header">
+        <div class="logo-badge">AF</div>
+        <h1 class="brand-title">AFriGain</h1>
+        <div class="brand-subtitle">Plateforme des Talents & Opportunités Réelles</div>
+      </div>
+      <div class="content">
+        <h2 class="greeting">Bienvenue sur AFriGain !</h2>
+        <p class="paragraph">
+          Merci pour votre inscription. AFriGain connecte les entrepreneurs, indépendants et entreprises à travers l'Afrique et à l'international avec un suivi transparent, des devis et factures conformes, et des opportunités vérifiées.
+        </p>
+        <p class="paragraph">
+          Pour sécuriser votre compte et activer immédiatement l'accès complet à votre espace personnel, veuillez confirmer votre adresse e-mail en cliquant sur le bouton ci-dessous :
+        </p>
+        
+        <div class="cta-container">
+          <a href="{{ .ConfirmationURL }}" class="cta-button" target="_blank">
+            Confirmer mon adresse e-mail
+          </a>
+        </div>
+
+        <div class="info-box">
+          <strong>Important :</strong> Ce lien de confirmation est sécurisé et valide pendant <strong>24 heures</strong>. L'activation de votre e-mail est obligatoire pour émettre des devis, facturer ou postuler à des missions.
+        </div>
+
+        <div class="link-fallback">
+          Si le bouton ne fonctionne pas, copiez et collez l'URL suivante dans votre navigateur :<br>
+          <a href="{{ .ConfirmationURL }}">{{ .ConfirmationURL }}</a>
+        </div>
+      </div>
+      <div class="footer">
+        <p style="margin: 0 0 6px 0;"><strong>AFriGain</strong> • Cotonou, Bénin & Afrique de l'Ouest</p>
+        <p style="margin: 0 0 6px 0;">Expéditeur officiel : agossouv79@gmail.com</p>
+        <p style="margin: 0;">Si vous n'êtes pas à l'origine de cette demande d'inscription, vous pouvez ignorer cet e-mail en toute sécurité.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

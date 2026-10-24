@@ -1,0 +1,15 @@
+Bienvenue sur AFriGain !
+
+Merci pour votre inscription sur AFriGain, la plateforme des talents et opportunités réelles.
+
+Pour sécuriser votre compte et activer votre accès aux fonctionnalités protégées (missions, devis, factures, coach), veuillez confirmer votre adresse e-mail en cliquant sur le lien ci-dessous :
+
+{{ .ConfirmationURL }}
+
+Ce lien est valable pendant 24 heures.
+
+Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet e-mail.
+
+L'équipe AFriGain
+Expéditeur : agossouv79@gmail.com
+Cotonou, Bénin

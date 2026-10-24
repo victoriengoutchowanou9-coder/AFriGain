@@ -78,6 +78,13 @@ export default function CreateMissionPage() {
         return;
       }
 
+      if (!userData.user.email_confirmed_at) {
+        setErrorMsg("Votre adresse e-mail doit être confirmée avant de pouvoir publier une mission sur AFriGain.");
+        setSubmitting(false);
+        router.push(`/auth/verify-email?email=${encodeURIComponent(userData.user.email || "")}&required=1`);
+        return;
+      }
+
       const { data, error } = await supabase.from("job_posts").insert({
         client_id: userData.user.id,
         category_id: categoryId || null,
