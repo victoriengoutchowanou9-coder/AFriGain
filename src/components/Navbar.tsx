@@ -17,9 +17,11 @@ import {
   Layers,
   Sparkles,
   Compass,
-  ChevronDown
+  ChevronDown,
+  MessageSquare
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { NotificationCenter } from "./NotificationCenter";
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -141,6 +143,19 @@ export function Navbar() {
 
           {/* CTA & Auth Desktop */}
           <div className="hidden lg:flex items-center gap-2.5 shrink-0">
+            {user && (
+              <>
+                <Link
+                  href="/messages"
+                  className="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+                  title="Messagerie instantanée"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                </Link>
+                <NotificationCenter />
+              </>
+            )}
+
             <Link
               href="/dashboard"
               className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-800 hover:border-brand-500 hover:text-brand-600 transition-colors flex items-center gap-1.5"
@@ -255,6 +270,13 @@ export function Navbar() {
               className="p-2.5 rounded-xl bg-slate-50 text-slate-900 hover:bg-brand-50 font-bold text-xs"
             >
               📄 Devis & Factures
+            </Link>
+            <Link
+              href="/messages"
+              onClick={() => setMobileMenuOpen(false)}
+              className="p-2.5 rounded-xl bg-slate-50 text-slate-900 hover:bg-brand-50 font-bold text-xs"
+            >
+              💬 Messagerie Privée
             </Link>
             <Link
               href="/dashboard/coach-ia"

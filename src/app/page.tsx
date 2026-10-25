@@ -10,23 +10,34 @@ import {
   Bot, 
   ShieldCheck, 
   TrendingUp, 
-  Sparkles,
-  Users,
-  Compass,
-  Building2,
-  Package,
-  Layers,
-  Search,
-  MapPin,
-  ChevronRight,
-  Target,
-  GraduationCap
+  Sparkles, 
+  Users, 
+  Compass, 
+  Building2, 
+  Package, 
+  Layers, 
+  Search, 
+  MapPin, 
+  ChevronRight, 
+  Target, 
+  GraduationCap,
+  MessageSquare,
+  Video,
+  Flame,
+  Award
 } from "lucide-react";
-import { AFRIGAIN_METIERS } from "@/lib/constants";
+import { StoriesBar } from "@/components/StoriesBar";
+import { AfriGainFeed } from "@/components/AfriGainFeed";
+import { DailyOpportunitiesHub } from "@/components/DailyOpportunitiesHub";
+import { NearMeHub } from "@/components/NearMeHub";
+import { AfriGainLiveHub } from "@/components/AfriGainLiveHub";
+import { MarketplaceRequestHub } from "@/components/MarketplaceRequestHub";
+import { ChallengesWidget } from "@/components/ChallengesWidget";
 
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedObjective, setSelectedObjective] = useState<string | null>("emploi");
+  const [activeTab, setActiveTab] = useState<"feed" | "opportunites" | "pres-de-moi" | "live" | "recherche">("feed");
 
   // Les 10 Objectifs Concrets de la Section 15 du Prompt Maître
   const OBJECTIVES = [
@@ -114,29 +125,36 @@ export default function HomePage() {
 
   const currentObj = OBJECTIVES.find((o) => o.id === selectedObjective) || OBJECTIVES[0];
 
+  const TABS = [
+    { id: "feed", label: "Le Fil AfriGain", icon: MessageSquare, badge: "Actu" },
+    { id: "opportunites", label: "Opportunités du jour", icon: Briefcase, badge: "Nouveau" },
+    { id: "pres-de-moi", label: "Près de moi", icon: MapPin },
+    { id: "live", label: "AfriGain Live", icon: Video },
+    { id: "recherche", label: "Marketplace & Approvisionnement", icon: Package },
+  ];
+
   return (
-    <div className="space-y-16 pb-16">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-brand-50/70 via-white to-slate-50 border-b border-slate-200/80 pt-16 pb-20">
+    <div className="space-y-10 pb-16">
+      {/* 1. Hero Section compacte et professionnelle */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-brand-50/60 via-white to-slate-50 border-b border-slate-200/80 pt-10 pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto space-y-6">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-100 text-brand-800 text-xs font-semibold tracking-wide">
+          <div className="text-center max-w-3xl mx-auto space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-100 text-brand-800 text-xs font-semibold tracking-wide">
               <Sparkles className="w-3.5 h-3.5" />
-              Plateforme Intelligente de Transformation Économique • Afrique & International
+              Écosystème Numérique Professionnel • Afrique & International
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
               Des compétences aux opportunités. <br />
-              <span className="text-brand-600">Des opportunités aux revenus.</span> <br />
-              Et des entreprises aux marchés.
+              <span className="text-brand-600">Des opportunités aux revenus.</span>
             </h1>
 
-            <p className="text-base sm:text-lg text-slate-600 leading-relaxed font-normal">
-              AFriGain connecte les jeunes, artisans, indépendants, entreprises et fournisseurs avec des opportunités réelles, la gestion intégrée (Devis & Factures) et l'intelligence artificielle pour bâtir une valeur économique durable.
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal max-w-2xl mx-auto">
+              AFriGain réunit les particuliers, jeunes, indépendants, entreprises et fournisseurs pour échanger, publier, découvrir des opportunités concrètes et développer leurs affaires.
             </p>
 
-            {/* Moteur de recherche unifié (Section 21 & 26) */}
-            <div className="max-w-xl mx-auto pt-2">
+            {/* Moteur de recherche unifié (Section 16) */}
+            <div className="max-w-xl mx-auto pt-1">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -144,63 +162,156 @@ export default function HomePage() {
                     window.location.href = `/emplois?q=${encodeURIComponent(searchQuery)}`;
                   }
                 }}
-                className="flex items-center bg-white rounded-2xl border border-slate-300 shadow-md p-1.5 focus-within:ring-2 focus-within:ring-brand-500"
+                className="flex items-center bg-white rounded-2xl border border-slate-300 shadow-xs p-1.5 focus-within:ring-2 focus-within:ring-brand-500"
               >
-                <Search className="w-5 h-5 text-slate-400 ml-3" />
+                <Search className="w-4 h-4 text-slate-400 ml-3" />
                 <input
                   type="text"
-                  placeholder="Métier, compétence, produit, ville (ex: Comptable, Cotonou)..."
+                  placeholder="Métier, opportunité, produit, ville (ex: Couturier, Cotonou)..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-3 py-2 text-xs sm:text-sm text-slate-900 focus:outline-none"
+                  className="w-full px-3 py-1.5 text-xs text-slate-900 focus:outline-none"
                 />
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shrink-0 transition-colors"
+                  className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shrink-0 transition-colors"
                 >
                   Rechercher
                 </button>
               </form>
             </div>
+          </div>
+        </div>
+      </section>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
-              <Link
-                href="/commencer"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md hover:shadow-lg transition-all"
-              >
-                <Compass className="w-4 h-4" />
-                Je commence sans expérience (Parcours Débutants)
-              </Link>
-              <Link
-                href="/emplois"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-semibold text-slate-800 bg-white border border-slate-300 hover:bg-slate-100 shadow-sm transition-all"
-              >
-                <Briefcase className="w-4 h-4 text-brand-600" />
-                Consulter les offres d'emploi
-              </Link>
+      {/* 2. TABLEAU DE BORD VIVANT PRINCIPAL (Section 15 du PDF) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        {/* Barre de Stories (Section 6) */}
+        <StoriesBar />
+
+        {/* Disposition épurée et non encombrante (Main Feed 8 cols + Sidebar 4 cols) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Colonne Principale (8 colonnes) */}
+          <div className="lg:col-span-8 space-y-4">
+            {/* Système d'onglets dynamique pour fluidifier l'expérience */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar border-b border-slate-200">
+              {TABS.map((tab) => {
+                const Icon = tab.icon;
+                const active = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as any)}
+                    className={`px-3.5 py-2 rounded-t-xl text-xs font-bold shrink-0 transition-all flex items-center gap-2 border-b-2 ${
+                      active
+                        ? "border-brand-600 text-brand-600 bg-white"
+                        : "border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span>{tab.label}</span>
+                    {tab.badge && (
+                      <span className="text-[9px] font-extrabold bg-brand-100 text-brand-700 px-1.5 py-0.2 rounded-full">
+                        {tab.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
 
-            {/* Règle de transparence absolue */}
-            <div className="pt-2 flex items-center justify-center gap-2 text-xs text-slate-500">
-              <CheckCircle2 className="w-4 h-4 text-brand-600" />
-              <span>Données réelles vérifiées • Zéro promesse d'enrichissement facile sans travail</span>
+            {/* Contenu de l'onglet sélectionné */}
+            <div className="transition-all animate-fade-in">
+              {activeTab === "feed" && <AfriGainFeed />}
+              {activeTab === "opportunites" && <DailyOpportunitiesHub />}
+              {activeTab === "pres-de-moi" && <NearMeHub />}
+              {activeTab === "live" && <AfriGainLiveHub />}
+              {activeTab === "recherche" && <MarketplaceRequestHub />}
+            </div>
+          </div>
+
+          {/* Colonne Latérale / Widgets Utiles (4 colonnes) */}
+          <div className="lg:col-span-4 space-y-4">
+            {/* Widget Défis AfriGain (Section 8) */}
+            <ChallengesWidget />
+
+            {/* Assistant Intelligent AfriGain AI (Section 11) */}
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50/40 rounded-2xl border border-amber-200/80 p-4 shadow-xs space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-amber-600 text-white flex items-center justify-center font-bold">
+                  <Bot className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-slate-900 text-xs sm:text-sm">Assistant Business IA</h4>
+                  <span className="text-[10px] text-amber-900">Transformez vos idées en action</span>
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Besoin d'aide pour rédiger une offre, valoriser vos compétences ou calculer vos tarifs ?
+              </p>
+
+              <div className="space-y-1.5 pt-1">
+                <Link
+                  href="/dashboard/coach-ia?mode=skills"
+                  className="w-full text-left p-2 rounded-xl bg-white/80 border border-amber-200 text-[11px] font-semibold text-slate-800 hover:bg-white flex items-center justify-between"
+                >
+                  <span>Identifier mes compétences</span>
+                  <ChevronRight className="w-3.5 h-3.5 text-amber-600" />
+                </Link>
+                <Link
+                  href="/dashboard/coach-ia?mode=pitch"
+                  className="w-full text-left p-2 rounded-xl bg-white/80 border border-amber-200 text-[11px] font-semibold text-slate-800 hover:bg-white flex items-center justify-between"
+                >
+                  <span>Générer un pitch commercial</span>
+                  <ChevronRight className="w-3.5 h-3.5 text-amber-600" />
+                </Link>
+                <Link
+                  href="/dashboard/quotes"
+                  className="w-full text-left p-2 rounded-xl bg-white/80 border border-amber-200 text-[11px] font-semibold text-slate-800 hover:bg-white flex items-center justify-between"
+                >
+                  <span>Créer un devis aux normes UEMOA</span>
+                  <ChevronRight className="w-3.5 h-3.5 text-amber-600" />
+                </Link>
+              </div>
+            </div>
+
+            {/* Parcours Débutants "Je commence" */}
+            <div className="bg-emerald-50/60 rounded-2xl border border-emerald-200/80 p-4 shadow-xs space-y-2.5">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold">
+                  <Compass className="w-4 h-4" />
+                </div>
+                <h4 className="font-bold text-slate-900 text-xs sm:text-sm">
+                  Débutant sans expérience ?
+                </h4>
+              </div>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Apprenez des compétences concrètes grâce à nos parcours d'action guidés pas-à-pas.
+              </p>
+              <Link
+                href="/commencer"
+                className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 hover:text-emerald-800 pt-1"
+              >
+                Découvrir le programme →
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* SECTION 15 DU PROMPT : ASSISTANT D'ORIENTATION "Quel est ton objectif aujourd'hui ?" */}
+      {/* 3. ASSISTANT D'ORIENTATION INTERACTIF "Quel est votre objectif ?" */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-10 shadow-sm space-y-6">
-          <div className="text-center max-w-2xl mx-auto space-y-2">
-            <span className="text-[11px] font-bold text-brand-600 uppercase tracking-wider">
-              Orientation Interactive (Section 15)
+        <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
+          <div className="text-center max-w-2xl mx-auto space-y-1">
+            <span className="text-[10px] font-bold text-brand-600 uppercase tracking-wider">
+              Orientation Métier & Entreprise
             </span>
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900">
               Quel est votre objectif aujourd'hui ?
             </h2>
-            <p className="text-slate-500 text-xs sm:text-sm">
-              Sélectionnez votre situation pour afficher instantanément votre parcours sur mesure :
+            <p className="text-slate-500 text-xs">
+              Sélectionnez votre profil pour afficher immédiatement vos actions recommandées :
             </p>
           </div>
 
@@ -214,7 +325,7 @@ export default function HomePage() {
                   onClick={() => setSelectedObjective(obj.id)}
                   className={`p-3 rounded-2xl text-left border transition-all text-xs flex flex-col justify-between h-24 ${
                     active
-                      ? "border-brand-600 bg-brand-50/80 shadow-sm font-bold text-brand-900"
+                      ? "border-brand-600 bg-brand-50/80 shadow-xs font-bold text-brand-900"
                       : "border-slate-200 hover:bg-slate-50 text-slate-700"
                   }`}
                 >
@@ -229,119 +340,20 @@ export default function HomePage() {
 
           {/* Carte du parcours recommandé */}
           {currentObj && (
-            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in">
+            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-brand-600">Parcours Recommandé</span>
-                <h3 className="text-base font-bold text-slate-900">{currentObj.title}</h3>
+                <h3 className="text-sm font-bold text-slate-900">{currentObj.title}</h3>
                 <p className="text-xs text-slate-600">{currentObj.desc}</p>
               </div>
               <Link
                 href={currentObj.targetUrl}
-                className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-sm transition-colors self-start sm:self-auto shrink-0"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-xs transition-colors self-start sm:self-auto shrink-0"
               >
                 {currentObj.actionText} <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
           )}
-        </div>
-      </section>
-
-      {/* MODULES PHARES : Emplois, Missions, Fournisseurs & Gestion */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        <div className="text-center max-w-2xl mx-auto space-y-2">
-          <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
-            Un écosystème économique complet et fonctionnel
-          </h2>
-          <p className="text-slate-600 text-xs sm:text-sm">
-            Tous les modules communiquent entre eux pour transformer vos compétences en valeur financière.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 hover:border-brand-500 transition-all flex flex-col justify-between">
-            <div className="space-y-3">
-              <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
-                <Briefcase className="w-6 h-6" />
-              </div>
-              <h3 className="text-lg font-bold text-slate-900">Emplois & Missions Débutants</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Offres d'emploi par métier et par région (Cotonou, Parakou, UEMOA) et missions avec budgets garantis et filtres sans expérience.
-              </p>
-            </div>
-            <Link
-              href="/emplois"
-              className="text-xs font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1 pt-2"
-            >
-              Consulter les emplois <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-
-          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 hover:border-brand-500 transition-all flex flex-col justify-between">
-            <div className="space-y-3">
-              <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
-                <Bot className="w-6 h-6" />
-              </div>
-              <h3 className="text-lg font-bold text-slate-900">AfriGain AI & Business Coach</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Diagnostic de vos compétences, générateur de CV pro sans mentir, générateur d'offres vendables et calculateur de prix à la marge.
-              </p>
-            </div>
-            <Link
-              href="/dashboard/coach-ia"
-              className="text-xs font-bold text-amber-600 hover:text-amber-700 flex items-center gap-1 pt-2"
-            >
-              Ouvrir l'assistant IA <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-
-          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 hover:border-brand-500 transition-all flex flex-col justify-between">
-            <div className="space-y-3">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
-                <FileSpreadsheet className="w-6 h-6" />
-              </div>
-              <h3 className="text-lg font-bold text-slate-900">Devis & Factures Professionnels</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Édition conforme UEMOA en FCFA / EUR, conversion en facture en 1 clic, impression PDF officielle et relances de paiement.
-              </p>
-            </div>
-            <Link
-              href="/dashboard/quotes"
-              className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 pt-2"
-            >
-              Créer un devis gratuit <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Marketplace B2B & Fournisseurs (Section 9 & 10) */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-slate-900 text-white rounded-3xl p-8 sm:p-12 shadow-xl flex flex-col lg:flex-row items-center justify-between gap-8">
-          <div className="space-y-3 max-w-xl">
-            <span className="text-xs font-bold text-brand-400 uppercase tracking-wider">
-              Marketplace B2B & Approvisionnement (Section 9 & 10)
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold leading-tight">
-              Trouvez des fournisseurs de matières premières et des distributeurs certifiés
-            </h2>
-            <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">
-              Agroalimentaire, textile, emballages et matériaux BTP au Bénin et en Afrique de l'Ouest. Publiez vos besoins d'approvisionnement ou obtenez des cotations directes.
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Link
-              href="/fournisseurs"
-              className="px-5 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs text-center transition-colors shadow-md"
-            >
-              Catalogue Fournisseurs
-            </Link>
-            <Link
-              href="/entreprises"
-              className="px-5 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs text-center border border-slate-700 transition-colors"
-            >
-              Annuaire Entreprises
-            </Link>
-          </div>
         </div>
       </section>
     </div>
