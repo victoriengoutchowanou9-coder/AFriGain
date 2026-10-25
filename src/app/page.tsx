@@ -122,7 +122,7 @@ export default function HomePage() {
           <div className="text-center max-w-3xl mx-auto space-y-6">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-100 text-brand-800 text-xs font-semibold tracking-wide">
               <Sparkles className="w-3.5 h-3.5" />
-              Plateforme Intelligente de Transformation Économique • Bénin & International
+              Plateforme Intelligente de Transformation Économique • Afrique & International
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight">

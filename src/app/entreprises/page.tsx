@@ -18,8 +18,14 @@ import {
   Award,
   Sparkles,
   ArrowRight,
-  X
+  X,
+  Camera,
+  Maximize2,
+  ChevronLeft,
+  ChevronRight,
+  AlertTriangle
 } from "lucide-react";
+import { FraudReportModal } from "@/components/FraudReportModal";
 
 interface CompanyProfile {
   id: string;
@@ -41,6 +47,7 @@ interface CompanyProfile {
   openMissionsCount: number;
   newsTitle?: string;
   newsContent?: string;
+  galleryUrls?: string[]; // Section 7 : 5 photos maximum de présentation
 }
 
 const INITIAL_COMPANIES: CompanyProfile[] = [
@@ -64,6 +71,13 @@ const INITIAL_COMPANIES: CompanyProfile[] = [
     openMissionsCount: 2,
     newsTitle: "Ouverture de notre nouvelle API de paiement QR Code pour TPE",
     newsContent: "Intégrez le paiement instantané sur votre site ou application en moins de 24h avec un taux réduit.",
+    galleryUrls: [
+      "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=800&q=80"
+    ],
   },
   {
     id: "comp-2",
@@ -84,6 +98,13 @@ const INITIAL_COMPANIES: CompanyProfile[] = [
     openMissionsCount: 1,
     newsTitle: "Nouveau guide fiscal 2026 pour micro-entrepreneurs",
     newsContent: "Téléchargez les bonnes pratiques pour optimiser vos déclarations sans pénalités.",
+    galleryUrls: [
+      "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=800&q=80"
+    ],
   },
   {
     id: "comp-3",
@@ -104,6 +125,13 @@ const INITIAL_COMPANIES: CompanyProfile[] = [
     openMissionsCount: 0,
     newsTitle: "Campagne d'électrification des fermes maraîchères 2026",
     newsContent: "Facilités de paiement en 3 fois sans frais pour les exploitants agricoles enregistrés sur AfriGain.",
+    galleryUrls: [
+      "https://images.unsplash.com/photo-1509391365360-2e959784a276?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1497440001374-f26997328c1b?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1548337138-e87d889cc369?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1508873696983-2df5293cb32b?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1466611653911-95081537e5b7?auto=format&fit=crop&w=800&q=80"
+    ],
   },
   {
     id: "comp-4",
@@ -122,6 +150,13 @@ const INITIAL_COMPANIES: CompanyProfile[] = [
     phone: "+225 07 08 09 10 11",
     openJobsCount: 1,
     openMissionsCount: 1,
+    galleryUrls: [
+      "https://images.unsplash.com/photo-1542744094-3a31f272c490?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1600132806370-bf17e65e942f?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1534972195531-a756b1126f24?auto=format&fit=crop&w=800&q=80"
+    ],
   },
 ];
 
@@ -138,6 +173,14 @@ export default function EntreprisesPage() {
   const [contactPhone, setContactPhone] = useState("");
   const [contactMessage, setContactMessage] = useState("");
   const [contactSuccess, setContactSuccess] = useState(false);
+
+  // Modale Galerie 5 photos d'activité (Section 7)
+  const [galleryCompany, setGalleryCompany] = useState<CompanyProfile | null>(null);
+  const [galleryActiveIndex, setGalleryActiveIndex] = useState(0);
+  const [zoomPhotoUrl, setZoomPhotoUrl] = useState<string | null>(null);
+
+  // Modale Signalement Anti-Arnaque (Section 14)
+  const [reportCompany, setReportCompany] = useState<CompanyProfile | null>(null);
 
   const filteredCompanies = companies.filter((c) => {
     const matchesSearch =
@@ -300,6 +343,35 @@ export default function EntreprisesPage() {
               )}
             </div>
 
+            {/* Galerie d'activité 5 photos max (Section 7) & Actions */}
+            <div className="flex items-center justify-between pt-2">
+              {c.galleryUrls && c.galleryUrls.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGalleryCompany(c);
+                    setGalleryActiveIndex(0);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 rounded-xl text-xs font-bold transition-colors shadow-sm"
+                >
+                  <Camera className="w-3.5 h-3.5 text-brand-600" />
+                  <span>Galerie ({c.galleryUrls.length}/5 photos)</span>
+                </button>
+              ) : (
+                <span className="text-[11px] text-slate-400">Galerie en cours de mise en ligne</span>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setReportCompany(c)}
+                className="text-slate-400 hover:text-rose-600 text-[11px] flex items-center gap-1 p-1 transition-colors"
+                title="Signaler ce profil suspect"
+              >
+                <AlertTriangle className="w-3.5 h-3.5" />
+                <span>Signaler</span>
+              </button>
+            </div>
+
             <div className="border-t border-slate-100 pt-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {c.openJobsCount > 0 && (
@@ -307,7 +379,7 @@ export default function EntreprisesPage() {
                     href="/emplois"
                     className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 hover:bg-emerald-100"
                   >
-                    {c.openJobsCount} offre d'emploi active
+                    {c.openJobsCount} offre active
                   </Link>
                 )}
                 {c.openMissionsCount > 0 && (
@@ -315,7 +387,7 @@ export default function EntreprisesPage() {
                     href="/missions"
                     className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand-700 bg-brand-50 px-2 py-0.5 rounded border border-brand-200 hover:bg-brand-100"
                   >
-                    {c.openMissionsCount} mission ouverte
+                    {c.openMissionsCount} mission
                   </Link>
                 )}
               </div>
@@ -324,12 +396,150 @@ export default function EntreprisesPage() {
                 onClick={() => setContactCompany(c)}
                 className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold shadow-sm transition-colors"
               >
-                Demander un contact / devis <ArrowRight className="w-3.5 h-3.5" />
+                Contacter / Devis <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
         ))}
       </div>
+
+      {/* MODALE GALERIE D'ACTIVITÉ ENTREPRISE (Section 7 : Affichage public 5 photos max, responsive, zoom, proportions respectées) */}
+      {galleryCompany && galleryCompany.galleryUrls && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-hidden border border-slate-200 shadow-2xl flex flex-col relative">
+            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-100">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full">
+                  Galerie d'Activité Officielle • 5 Photos Maximum
+                </span>
+                <h3 className="text-lg font-bold text-slate-900 mt-1">{galleryCompany.name}</h3>
+                <span className="text-xs text-slate-500">{galleryCompany.city}, {galleryCompany.country}</span>
+              </div>
+              <button
+                onClick={() => setGalleryCompany(null)}
+                className="p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Contenu photo grande image */}
+            <div className="p-4 sm:p-6 bg-slate-950 flex flex-col items-center justify-center relative select-none">
+              <div className="relative aspect-[16/9] w-full max-h-[50vh] rounded-2xl overflow-hidden bg-black flex items-center justify-center">
+                <img
+                  src={galleryCompany.galleryUrls[galleryActiveIndex]}
+                  alt={`${galleryCompany.name} - Photo ${galleryActiveIndex + 1}`}
+                  className="w-full h-full object-contain cursor-pointer"
+                  onClick={() => setZoomPhotoUrl(galleryCompany.galleryUrls![galleryActiveIndex])}
+                />
+
+                <div className="absolute top-3 left-3 bg-black/60 text-white text-[11px] font-mono px-2 py-0.5 rounded-md">
+                  Photo {galleryActiveIndex + 1} / {galleryCompany.galleryUrls.length}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setZoomPhotoUrl(galleryCompany.galleryUrls![galleryActiveIndex])}
+                  className="absolute top-3 right-3 p-2 bg-black/60 hover:bg-black text-white rounded-xl transition-colors"
+                  title="Agrandir en haute définition"
+                >
+                  <Maximize2 className="w-4 h-4" />
+                </button>
+
+                {galleryCompany.galleryUrls.length > 1 && (
+                  <>
+                    <button
+                      onClick={() =>
+                        setGalleryActiveIndex((prev) =>
+                          prev === 0 ? galleryCompany.galleryUrls!.length - 1 : prev - 1
+                        )
+                      }
+                      className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-black/60 hover:bg-black text-white rounded-full transition-colors"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() =>
+                        setGalleryActiveIndex((prev) =>
+                          prev === galleryCompany.galleryUrls!.length - 1 ? 0 : prev + 1
+                        )
+                      }
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-black/60 hover:bg-black text-white rounded-full transition-colors"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {/* Miniatures */}
+              <div className="flex items-center gap-2 pt-4 overflow-x-auto max-w-full">
+                {galleryCompany.galleryUrls.map((url, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setGalleryActiveIndex(idx)}
+                    className={`w-14 h-14 rounded-xl overflow-hidden shrink-0 border-2 transition-all ${
+                      idx === galleryActiveIndex
+                        ? "border-brand-500 scale-105"
+                        : "border-slate-800 opacity-60 hover:opacity-100"
+                    }`}
+                  >
+                    <img src={url} alt={`Miniature ${idx + 1}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+              <span>* Présentation des locaux, ateliers, installations et réalisations professionnelles.</span>
+              <button
+                type="button"
+                onClick={() => {
+                  const comp = galleryCompany;
+                  setGalleryCompany(null);
+                  setContactCompany(comp);
+                }}
+                className="font-bold text-brand-700 hover:underline"
+              >
+                Demander un devis à cette entreprise →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox Zoom HD */}
+      {zoomPhotoUrl && (
+        <div
+          className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center p-4"
+          onClick={() => setZoomPhotoUrl(null)}
+        >
+          <button
+            onClick={() => setZoomPhotoUrl(null)}
+            className="absolute top-6 right-6 text-white hover:text-slate-300 p-2"
+          >
+            <X className="w-8 h-8" />
+          </button>
+          <img
+            src={zoomPhotoUrl}
+            alt="Plein écran"
+            className="max-w-[95vw] max-h-[90vh] object-contain rounded-2xl shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+
+      {/* Modal Signalement Anti-Fraude */}
+      {reportCompany && (
+        <FraudReportModal
+          isOpen={true}
+          onClose={() => setReportCompany(null)}
+          targetId={reportCompany.id}
+          targetType="profile"
+          targetTitle={reportCompany.name}
+        />
+      )}
 
       {/* Modale Demande de devis ou de contact */}
       {contactCompany && (

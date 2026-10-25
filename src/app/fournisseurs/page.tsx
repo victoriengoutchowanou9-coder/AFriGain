@@ -19,9 +19,15 @@ import {
   Boxes,
   Clock,
   PhoneCall,
-  Mail
+  Mail,
+  Camera,
+  AlertTriangle,
+  Eye,
+  Sparkles
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { SupplierProductGalleryModal, RichSupplierProduct } from "@/components/SupplierProductGalleryModal";
+import { FraudReportModal } from "@/components/FraudReportModal";
 
 interface Supplier {
   id: string;
@@ -38,6 +44,7 @@ interface Supplier {
   contactEmail: string;
   contactPhone: string;
   description: string;
+  detailedProducts?: RichSupplierProduct[]; // Section 8 : Au moins 5 photos par produit
 }
 
 interface SupplyNeed {
@@ -67,6 +74,28 @@ const INITIAL_SUPPLIERS: Supplier[] = [
     contactEmail: "appro@agrobenin.bj",
     contactPhone: "+229 97 22 11 00",
     description: "Fournisseur direct de coopératives agricoles du Nord Bénin. Qualité calibrée avec certificats phytosanitaires disponibles.",
+    detailedProducts: [
+      {
+        id: "prod-soja-1",
+        name: "Soja non OGM certifié Bénin (Qualité Export UEMOA)",
+        supplierName: "AgroBénin Appro",
+        supplierCity: "Parakou",
+        supplierCountry: "Bénin",
+        supplierVerified: true,
+        category: "Matières Premières Agricoles",
+        description: "Graines de soja jaune récoltées dans les fermes du Borgou. Taux d'humidité contrôlé inférieur à 10%, calibrage homogène et absence d'impuretés. Idéal pour unités de transformation en huile, tourteau ou lait de soja.",
+        minOrderQuantity: "1 tonne (sacs de 50 kg ou 100 kg)",
+        leadTime: "3 à 5 jours ouvrés",
+        paymentTerms: "Acompte 30%, solde à la pesée contradictoire",
+        galleryUrls: [
+          "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?auto=format&fit=crop&w=800&q=80",
+          "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&w=800&q=80",
+          "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=80",
+          "https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?auto=format&fit=crop&w=800&q=80",
+          "https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=800&q=80"
+        ]
+      }
+    ]
   },
   {
     id: "sup-2",
@@ -83,6 +112,28 @@ const INITIAL_SUPPLIERS: Supplier[] = [
     contactEmail: "contact@ecowax-atelier.bj",
     contactPhone: "+229 95 33 44 55",
     description: "Atelier de confection semi-industriel et artisanal pour créateurs, hôtels et uniformes d'entreprises.",
+    detailedProducts: [
+      {
+        id: "prod-wax-1",
+        name: "Tissus teints artisanalement & Wax haute résistance",
+        supplierName: "Atelier Éco-Wax",
+        supplierCity: "Cotonou",
+        supplierCountry: "Bénin",
+        supplierVerified: true,
+        category: "Textile & Confection",
+        description: "Rouleaux de tissus 100% coton teints avec pigments naturels et fixateurs durables. Motifs traditionnels et contemporains. Résistance prouvée au lavage intensif.",
+        minOrderQuantity: "50 mètres ou 20 pièces",
+        leadTime: "7 à 10 jours",
+        paymentTerms: "40% commande, 60% livraison",
+        galleryUrls: [
+          "https://images.unsplash.com/photo-1528458876885-544243324950?auto=format&fit=crop&w=800&q=80",
+          "https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?auto=format&fit=crop&w=800&q=80",
+          "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80",
+          "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=800&q=80",
+          "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=800&q=80"
+        ]
+      }
+    ]
   },
   {
     id: "sup-3",
@@ -99,6 +150,28 @@ const INITIAL_SUPPLIERS: Supplier[] = [
     contactEmail: "ventes@afripack.bj",
     contactPhone: "+229 96 11 22 33",
     description: "Fabrication et distribution de solutions d'emballage écoresponsables pour transformateurs agroalimentaires et e-commerçants.",
+    detailedProducts: [
+      {
+        id: "prod-pack-1",
+        name: "Cartons double cannelure & Poches Kraft thermosoudables",
+        supplierName: "AfriPack Solutions",
+        supplierCity: "Abomey-Calavi",
+        supplierCountry: "Bénin",
+        supplierVerified: true,
+        category: "Emballages & Packaging",
+        description: "Emballages recyclables résistants aux chocs climatiques tropicaux. Personnalisables avec logo en sérigraphie à base d'encre végétale.",
+        minOrderQuantity: "200 unités",
+        leadTime: "48h stock / 5j personnalisation",
+        paymentTerms: "Comptant ou virement 15j",
+        galleryUrls: [
+          "https://images.unsplash.com/photo-1530587191325-3db32d826c18?auto=format&fit=crop&w=800&q=80",
+          "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=80",
+          "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&w=800&q=80",
+          "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=800&q=80",
+          "https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=800&q=80"
+        ]
+      }
+    ]
   },
   {
     id: "sup-4",
@@ -115,6 +188,28 @@ const INITIAL_SUPPLIERS: Supplier[] = [
     contactEmail: "commandes@btp-centrale.bj",
     contactPhone: "+229 94 88 77 66",
     description: "Grossiste en fournitures pour artisans électriciens, plombiers, menuisiers et constructeurs.",
+    detailedProducts: [
+      {
+        id: "prod-btp-1",
+        name: "Fers à béton crantés FE500 & Ciment CPJ 42.5",
+        supplierName: "BTP Quincaillerie Centrale",
+        supplierCity: "Porto-Novo",
+        supplierCountry: "Bénin",
+        supplierVerified: true,
+        category: "BTP & Construction",
+        description: "Matériaux de gros œuvre certifiés conformes aux normes UEMOA. Stockage au sec, livraison rapide directement par camion plateau sur chantier.",
+        minOrderQuantity: "2 tonnes fers ou 50 sacs ciment",
+        leadTime: "24h sur chantier",
+        paymentTerms: "Mobile Money sécurisé ou chèque certifié",
+        galleryUrls: [
+          "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=80",
+          "https://images.unsplash.com/photo-1541888946425-d0fbb186c5f7?auto=format&fit=crop&w=800&q=80",
+          "https://images.unsplash.com/photo-1517581177682-a085bb7ffb15?auto=format&fit=crop&w=800&q=80",
+          "https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=800&q=80",
+          "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=800&q=80"
+        ]
+      }
+    ]
   },
 ];
 
@@ -157,6 +252,12 @@ export default function FournisseursPage() {
   const [rfqSenderName, setRfqSenderName] = useState("");
   const [rfqSenderContact, setRfqSenderContact] = useState("");
   const [rfqSuccess, setRfqSuccess] = useState(false);
+
+  // Modale Galerie Produit Fournisseur (Section 8 : Au moins 5 photos par produit)
+  const [selectedProductForGallery, setSelectedProductForGallery] = useState<RichSupplierProduct | null>(null);
+
+  // Modale Signalement Anti-Arnaque (Section 14)
+  const [reportingSupplier, setReportingSupplier] = useState<Supplier | null>(null);
 
   // Modale publier besoin d'approvisionnement
   const [isNeedModalOpen, setIsNeedModalOpen] = useState(false);
@@ -339,14 +440,34 @@ export default function FournisseursPage() {
                     {sup.description}
                   </p>
 
-                  <div className="space-y-1.5 bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs">
-                    <div className="font-semibold text-slate-800">Catalogue disponible :</div>
-                    <div className="flex flex-wrap gap-1">
-                      {sup.products.map((p, idx) => (
-                        <span key={idx} className="bg-white border border-slate-200 text-slate-700 px-2 py-0.5 rounded text-[11px]">
-                          ✓ {p}
-                        </span>
-                      ))}
+                  <div className="space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs">
+                    <div className="flex items-center justify-between font-semibold text-slate-800">
+                      <span>Produits & Galeries (5+ photos distinctes) :</span>
+                      <span className="text-[10px] text-brand-600 font-normal">Cliquer pour voir la galerie</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {sup.detailedProducts && sup.detailedProducts.length > 0 ? (
+                        sup.detailedProducts.map((dp) => (
+                          <button
+                            key={dp.id}
+                            type="button"
+                            onClick={() => setSelectedProductForGallery(dp)}
+                            className="bg-white hover:bg-brand-50 border border-brand-200 text-brand-800 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all shadow-sm flex items-center gap-1.5 group"
+                          >
+                            <Camera className="w-3.5 h-3.5 text-brand-600 group-hover:scale-110 transition-transform" />
+                            <span>{dp.name}</span>
+                            <span className="text-[9px] bg-brand-100 text-brand-800 px-1.5 py-0.2 rounded font-mono font-bold">
+                              {dp.galleryUrls.length} photos
+                            </span>
+                          </button>
+                        ))
+                      ) : (
+                        sup.products.map((p, idx) => (
+                          <span key={idx} className="bg-white border border-slate-200 text-slate-700 px-2 py-0.5 rounded text-[11px]">
+                            ✓ {p}
+                          </span>
+                        ))
+                      )}
                     </div>
                   </div>
 
@@ -371,8 +492,17 @@ export default function FournisseursPage() {
                 </div>
 
                 <div className="border-t border-slate-100 pt-3 flex items-center justify-between">
-                  <div className="text-[11px] text-slate-500 flex items-center gap-2">
+                  <div className="text-[11px] text-slate-500 flex items-center gap-3">
                     <span className="flex items-center gap-1"><PhoneCall className="w-3 h-3 text-slate-400" /> {sup.contactPhone}</span>
+                    <button
+                      type="button"
+                      onClick={() => setReportingSupplier(sup)}
+                      className="text-slate-400 hover:text-rose-600 text-[10px] flex items-center gap-1"
+                      title="Signaler ce fournisseur"
+                    >
+                      <AlertTriangle className="w-3 h-3" />
+                      Signaler
+                    </button>
                   </div>
                   <button
                     onClick={() => setRfqSupplier(sup)}
@@ -617,6 +747,29 @@ export default function FournisseursPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Modale Galerie Produit Fournisseur (Section 8 : Inspection 5+ photos distinctes, zoom HD, miniatures) */}
+      <SupplierProductGalleryModal
+        product={selectedProductForGallery}
+        onClose={() => setSelectedProductForGallery(null)}
+        onRequestQuote={(prod) => {
+          setSelectedProductForGallery(null);
+          const foundSupplier = suppliers.find((s) => s.name === prod.supplierName) || suppliers[0];
+          setRfqSupplier(foundSupplier);
+          setRfqQuantity(`1 lot de "${prod.name}"`);
+        }}
+      />
+
+      {/* Modale Signalement Anti-Fraude (Section 14) */}
+      {reportingSupplier && (
+        <FraudReportModal
+          isOpen={true}
+          onClose={() => setReportingSupplier(null)}
+          targetId={reportingSupplier.id}
+          targetType="profile"
+          targetTitle={reportingSupplier.name}
+        />
       )}
     </div>
   );

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { User, ShieldCheck, ArrowLeft, Loader2, CheckCircle2, AlertCircle, Plus, X, Globe, Phone, MapPin } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { ALL_COUNTRIES } from "@/lib/constants";
 
 export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
@@ -136,6 +137,29 @@ export default function ProfilePage() {
         </p>
       </div>
 
+      {/* Bannière d'accès direct à la certification officielle (Section 5 & 6) */}
+      <div className="bg-emerald-50/80 border border-emerald-200 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+            <ShieldCheck className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="text-xs font-bold text-emerald-950 block">Certification d'Identité & Pièces Officielles</span>
+            <span className="text-[11px] text-emerald-800">
+              {verificationStatus === "verified"
+                ? "Votre profil est certifié. Vous pouvez mettre à jour vos documents en cas d'expiration."
+                : "Téléversez vos pièces (CNI, Passeport, carte étudiant, RCCM, IFU) dans un espace privé confidentiel."}
+            </span>
+          </div>
+        </div>
+        <Link
+          href="/dashboard/verification"
+          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-colors shadow-sm shrink-0 text-center"
+        >
+          {verificationStatus === "verified" ? "Voir mes certificats →" : "Passer la vérification →"}
+        </Link>
+      </div>
+
       {feedback && (
         <div
           className={`p-4 rounded-xl flex items-center gap-2.5 text-xs ${
@@ -201,13 +225,17 @@ export default function ProfilePage() {
             <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
               Pays *
             </label>
-            <input
-              type="text"
-              required
+            <select
               value={country}
               onChange={(e) => setCountry(e.target.value)}
-              className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-            />
+              className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white"
+            >
+              {ALL_COUNTRIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="space-y-1">

@@ -35,7 +35,195 @@ export const AFRIGAIN_REGIONS = [
   { country: "Cameroun", cities: ["Douala", "Yaoundé"] },
   { country: "Burkina Faso", cities: ["Ouagadougou", "Bobo-Dioulasso"] },
   { country: "Niger", cities: ["Niamey", "Maradi"] },
-  { country: "International", cities: ["France", "Belgique", "Canada", "USA", "Autre International"] },
+  { country: "Mali", cities: ["Bamako", "Sikasso", "Ségou"] },
+  { country: "Guinée", cities: ["Conakry", "Kankan", "Kindia"] },
+  { country: "Gabon", cities: ["Libreville", "Port-Gentil"] },
+  { country: "Congo (Brazzaville)", cities: ["Brazzaville", "Pointe-Noire"] },
+  { country: "RD Congo (Kinshasa)", cities: ["Kinshasa", "Lubumbashi", "Goma"] },
+  { country: "Rwanda", cities: ["Kigali"] },
+  { country: "Ghana", cities: ["Accra", "Kumasi"] },
+  { country: "Nigeria", cities: ["Lagos", "Abuja", "Ibadan"] },
+  { country: "France", cities: ["Paris", "Lyon", "Marseille"] },
+  { country: "Belgique", cities: ["Bruxelles", "Liège"] },
+  { country: "Canada", cities: ["Montréal", "Québec", "Toronto"] },
+  { country: "États-Unis", cities: ["New York", "Washington", "Autre"] },
+  { country: "Autre Afrique", cities: ["Capitale / Autre ville"] },
+  { country: "Autre International", cities: ["Autre ville"] },
+];
+
+export const ALL_COUNTRIES = [
+  "Bénin",
+  "Togo",
+  "Côte d'Ivoire",
+  "Sénégal",
+  "Cameroun",
+  "Burkina Faso",
+  "Niger",
+  "Mali",
+  "Guinée",
+  "Gabon",
+  "Congo (Brazzaville)",
+  "RD Congo (Kinshasa)",
+  "Rwanda",
+  "Ghana",
+  "Nigeria",
+  "France",
+  "Belgique",
+  "Canada",
+  "États-Unis",
+  "Autre Afrique",
+  "Autre International"
+];
+
+// Profils d'utilisateurs détaillés (Section 4 du prompt maître)
+export interface UserProfileCategory {
+  id: "etudiant" | "particulier" | "prestataire" | "artisan" | "entreprise" | "fournisseur";
+  label: string;
+  description: string;
+  baseRole: "entrepreneur" | "client";
+  badge: string;
+  requiresIFU: boolean;
+  requiresRCCM: boolean;
+  allowedDocs: string[];
+}
+
+export const USER_PROFILE_CATEGORIES: UserProfileCategory[] = [
+  {
+    id: "prestataire",
+    label: "Prestataire indépendant / Freelance",
+    description: "Consultant, développeur, designer, gestionnaire ou expert indépendant",
+    baseRole: "entrepreneur",
+    badge: "Prestataire",
+    requiresIFU: false,
+    requiresRCCM: false,
+    allowedDocs: ["cni", "passeport", "titre_sejour", "carte_consulaire"],
+  },
+  {
+    id: "entreprise",
+    label: "Entreprise / Société / Recruteur",
+    description: "Donneur d'ordre, PME, startup, société commerciale ou recruteur",
+    baseRole: "client",
+    badge: "Entreprise",
+    requiresIFU: true, // Si Bénin
+    requiresRCCM: true, // Si applicable
+    allowedDocs: ["rccm", "ifu", "kbis", "statuts"],
+  },
+  {
+    id: "etudiant",
+    label: "Étudiant & Jeune Diplômé",
+    description: "Recherche de stage, premier projet, sans obligation d'IFU ni de RCCM",
+    baseRole: "entrepreneur",
+    badge: "Étudiant",
+    requiresIFU: false,
+    requiresRCCM: false,
+    allowedDocs: ["carte_etudiant", "certificat_scolarite", "cni", "passeport"],
+  },
+  {
+    id: "particulier",
+    label: "Particulier / Demandeur d'opportunités",
+    description: "Accès aux formations, opportunités et missions ponctuelles",
+    baseRole: "entrepreneur",
+    badge: "Particulier",
+    requiresIFU: false,
+    requiresRCCM: false,
+    allowedDocs: ["cni", "passeport", "titre_sejour"],
+  },
+  {
+    id: "artisan",
+    label: "Artisan & Métiers d'Art",
+    description: "Couturier, mécanicien, électricien, bâtisseur, métiers manuels et d'atelier",
+    baseRole: "entrepreneur",
+    badge: "Artisan",
+    requiresIFU: false,
+    requiresRCCM: false,
+    allowedDocs: ["cni", "passeport", "carte_artisan", "titre_sejour"],
+  },
+  {
+    id: "fournisseur",
+    label: "Fournisseur B2B / Gros & Demi-gros",
+    description: "Producteur, grossiste de matières premières ou équipements",
+    baseRole: "entrepreneur",
+    badge: "Fournisseur B2B",
+    requiresIFU: true, // Si entreprise béninoise
+    requiresRCCM: true,
+    allowedDocs: ["rccm", "ifu", "agrement", "cni"],
+  },
+];
+
+// Types de pièces d'identité (Section 5 du prompt)
+export const ID_DOCUMENT_TYPES = [
+  { id: "cni", label: "Carte Nationale d'Identité (CNI)", requiresBack: true },
+  { id: "passeport", label: "Passeport International", requiresBack: false },
+  { id: "titre_sejour", label: "Carte / Titre de Séjour", requiresBack: true },
+  { id: "carte_etudiant", label: "Carte d'Étudiant / Certificat de Scolarité", requiresBack: false },
+  { id: "carte_consulaire", label: "Carte Consulaire", requiresBack: true },
+  { id: "autre", label: "Autre pièce officielle d'identité", requiresBack: false },
+];
+
+// Statuts de vérification d'identité (Section 5.3)
+export const IDENTITY_STATUSES: Record<string, { label: string; color: string; description: string }> = {
+  documents_pending: {
+    label: "Documents non fournis",
+    color: "bg-slate-100 text-slate-700 border-slate-300",
+    description: "Veuillez soumettre vos pièces d'identité pour certifier votre profil.",
+  },
+  incomplete: {
+    label: "Dossier incomplet",
+    color: "bg-amber-100 text-amber-800 border-amber-300",
+    description: "Certaines pièces obligatoires manquent à votre dossier.",
+  },
+  pending: {
+    label: "En attente de vérification",
+    color: "bg-blue-100 text-blue-800 border-blue-300",
+    description: "Vos documents ont été transmis et sont en file d'attente de modération.",
+  },
+  in_review: {
+    label: "En cours de vérification",
+    color: "bg-indigo-100 text-indigo-800 border-indigo-300",
+    description: "Un administrateur de conformité examine actuellement vos pièces.",
+  },
+  verified: {
+    label: "Identité vérifiée",
+    color: "bg-emerald-100 text-emerald-800 border-emerald-300",
+    description: "Votre identité a été authentifiée officiellement avec badge vérifié.",
+  },
+  rejected: {
+    label: "Documents rejetés",
+    color: "bg-rose-100 text-rose-800 border-rose-300",
+    description: "Les documents soumis n'ont pas pu être validés. Consultez le motif ci-dessous.",
+  },
+  correction_needed: {
+    label: "Correction demandée",
+    color: "bg-orange-100 text-orange-800 border-orange-300",
+    description: "Une modification ou un renvoi de pièce est requis par les administrateurs.",
+  },
+};
+
+// Statuts professionnels (Section 13)
+export const PROFESSIONAL_STATUSES: Record<string, { label: string; color: string }> = {
+  not_applicable: { label: "Non applicable", color: "bg-slate-100 text-slate-600 border-slate-200" },
+  documents_pending: { label: "À compléter", color: "bg-amber-50 text-amber-700 border-amber-200" },
+  pending: { label: "En attente", color: "bg-blue-50 text-blue-700 border-blue-200" },
+  verified: { label: "Entreprise vérifiée", color: "bg-emerald-100 text-emerald-800 border-emerald-300" },
+  rejected: { label: "Rejeté", color: "bg-rose-50 text-rose-700 border-rose-200" },
+  suspended: { label: "Suspendu", color: "bg-slate-200 text-slate-800 border-slate-300" },
+};
+
+// Statuts du compte utilisateur (Section 13)
+export const ACCOUNT_STATUSES: Record<string, { label: string; color: string }> = {
+  active: { label: "Actif", color: "bg-emerald-100 text-emerald-800" },
+  suspended: { label: "Suspendu", color: "bg-rose-100 text-rose-800" },
+  deactivated: { label: "Désactivé", color: "bg-slate-200 text-slate-700" },
+};
+
+// Motifs de signalement anti-arnaque (Section 14)
+export const FRAUD_REPORT_REASONS = [
+  { id: "demande_argent", label: "Demande d'argent avant embauche ou formation payante" },
+  { id: "fausse_identite", label: "Fausse identité ou usurpation d'entreprise" },
+  { id: "fausse_offre", label: "Offre d'emploi ou de mission fictive / irréaliste" },
+  { id: "num_ifu_invalide", label: "Numéro IFU ou RCCM suspect ou usurpé" },
+  { id: "non_paiement", label: "Non-respect des engagements financiers ou fraude au paiement" },
+  { id: "autre", label: "Autre comportement suspect ou abusif" },
 ];
 
 export const CONTRACT_TYPES = [

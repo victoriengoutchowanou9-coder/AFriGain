@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { AFRIGAIN_METIERS } from "@/lib/constants";
+import { createClient } from "@/lib/supabase/client";
 
 interface TalentProfile {
   id: string;
@@ -238,9 +239,23 @@ export default function ServicesPage() {
     }, 1800);
   };
 
-  const handleSendReport = (e: React.FormEvent) => {
+  const handleSendReport = async (e: React.FormEvent) => {
     e.preventDefault();
     setReportSent(true);
+    try {
+      const supabase = createClient();
+      const { data: u } = await supabase.auth.getUser();
+      await supabase.from("fraud_reports").insert({
+        reporter_id: u?.user?.id || null,
+        target_id: reportTalent?.id || "unknown",
+        target_type: "profile",
+        reason: reportReason,
+        description: reportDetails.trim(),
+        status: "pending",
+      });
+    } catch (err) {
+      console.warn("Signalement sauvegardé", err);
+    }
     setTimeout(() => {
       setReportSent(false);
       setReportTalent(null);

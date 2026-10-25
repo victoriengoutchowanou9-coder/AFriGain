@@ -61,7 +61,7 @@ export function Navbar() {
                 AFri<span className="text-brand-600">Gain</span>
               </span>
               <span className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold">
-                Bénin & International
+                Afrique & International
               </span>
             </div>
           </Link>

@@ -30,10 +30,15 @@ import {
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { CompanyGalleryManager } from "@/components/CompanyGalleryManager";
+import { AdminVerificationConsole } from "@/components/AdminVerificationConsole";
 
 export default function DashboardPage() {
   const [activeRole, setActiveRole] = useState<"jeune" | "prestataire" | "entreprise" | "admin">("jeune");
   const [userName, setUserName] = useState("Entrepreneur AfriGain");
+  const [userId, setUserId] = useState<string>("");
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [profileCompletion, setProfileCompletion] = useState(75);
 
   useEffect(() => {
@@ -41,8 +46,22 @@ export default function DashboardPage() {
       try {
         const supabase = createClient();
         const { data: userData } = await supabase.auth.getUser();
-        if (userData?.user?.email) {
-          setUserName(userData.user.user_metadata?.full_name || userData.user.email.split("@")[0]);
+        if (userData?.user) {
+          setUserId(userData.user.id);
+          setUserName(userData.user.user_metadata?.full_name || userData.user.email?.split("@")[0] || "Utilisateur");
+
+          const { data: p } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", userData.user.id)
+            .single();
+
+          if (p) {
+            setUserProfile(p);
+            if (p.role === "admin") {
+              setIsAdmin(true);
+            }
+          }
         }
       } catch (e) {
         // Mode démo
@@ -50,6 +69,17 @@ export default function DashboardPage() {
     }
     loadUser();
   }, []);
+
+  const baseRoles = [
+    { id: "jeune", label: "Jeune / Indépendant", icon: UserCheck },
+    { id: "prestataire", label: "Prestataire / Artisan", icon: Briefcase },
+    { id: "entreprise", label: "Entreprise / Recruteur", icon: Building },
+  ];
+
+  // Le rôle admin est strictement masqué aux utilisateurs normaux (aucun bouton visible sur la plateforme)
+  const availableRoles = isAdmin
+    ? [...baseRoles, { id: "admin", label: "Administration Plateforme", icon: Settings }]
+    : baseRoles;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
@@ -68,31 +98,40 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {/* Sélecteur de rôle adaptatif (Section 18) */}
-        <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 self-start md:self-auto">
-          {[
-            { id: "jeune", label: "Jeune / Indépendant", icon: UserCheck },
-            { id: "prestataire", label: "Prestataire / Artisan", icon: Briefcase },
-            { id: "entreprise", label: "Entreprise / Recruteur", icon: Building },
-            { id: "admin", label: "Administration Plateforme", icon: Settings },
-          ].map((role) => {
-            const Icon = role.icon;
-            const active = activeRole === role.id;
-            return (
-              <button
-                key={role.id}
-                onClick={() => setActiveRole(role.id as any)}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
-                  active
-                    ? "bg-white text-slate-900 shadow-sm"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5" />
-                {role.label}
-              </button>
-            );
-          })}
+        {/* Sélecteur de rôle adaptatif (Section 18) - Le rôle admin n'apparaît que si l'utilisateur est authentifié comme admin */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <Link
+            href="/dashboard/verification"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-2xl text-xs font-bold transition-all shadow-sm"
+          >
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+            <span>
+              {userProfile?.identity_status === "verified"
+                ? "Identité Certifiée ✓"
+                : "Certifier mon compte / Identité"}
+            </span>
+          </Link>
+
+          <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 self-start md:self-auto">
+            {availableRoles.map((role) => {
+              const Icon = role.icon;
+              const active = activeRole === role.id;
+              return (
+                <button
+                  key={role.id}
+                  onClick={() => setActiveRole(role.id as any)}
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                    active
+                      ? "bg-white text-slate-900 shadow-sm"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  {role.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -346,81 +385,41 @@ export default function DashboardPage() {
             </div>
 
             <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-              <h3 className="text-sm font-bold text-slate-900">Badge Entreprise Vérifiée</h3>
+              <h3 className="text-sm font-bold text-slate-900">Badge & Conformité Entreprise</h3>
               <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-200 text-xs text-emerald-900 space-y-2">
                 <div className="flex items-center gap-1.5 font-bold">
                   <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                  Statut : Dossier d'entreprise en règle (RCCM & IFU vérifiés)
+                  Statut : {userProfile?.professional_status === "verified" ? "Entreprise Officiellement Certifiée" : "En cours de validation (RCCM / IFU)"}
                 </div>
                 <p className="text-[11px] text-emerald-800 leading-relaxed">
                   Vos annonces bénéficient d'un classement prioritaire de confiance auprès des jeunes diplômés et artisans.
                 </p>
+                <Link
+                  href="/dashboard/verification"
+                  className="inline-block mt-1 text-xs font-bold text-brand-700 hover:underline"
+                >
+                  Mettre à jour mes pièces d'entreprise →
+                </Link>
               </div>
             </div>
           </div>
+
+          {/* Gestionnaire de Galerie d'Activité de l'Entreprise (Section 7 : Limite stricte de 5 photos) */}
+          {userId && (
+            <CompanyGalleryManager
+              userId={userId}
+              initialPhotos={userProfile?.company_gallery_urls || []}
+              onSaved={(newPhotos) => {
+                setUserProfile((prev: any) => ({ ...prev, company_gallery_urls: newPhotos }));
+              }}
+            />
+          )}
         </div>
       )}
 
-      {/* 4. TABLEAU DE BORD DE L'ADMINISTRATEUR (Section 18.4) */}
-      {activeRole === "admin" && (
-        <div className="space-y-6">
-          <div className="bg-slate-900 text-white p-6 rounded-2xl shadow-lg space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-xs text-brand-400 font-bold uppercase tracking-wider">Console de Supervision Plateforme</span>
-                <h3 className="text-lg font-bold">Gouvernance, Modération & Rigueur (Section 18 & 22)</h3>
-              </div>
-              <span className="text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-3 py-1 rounded-full font-mono">
-                Système 100% Opérationnel
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
-              <div className="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700">
-                <span className="text-[10px] text-slate-400 block uppercase">Signalements en attente</span>
-                <span className="text-xl font-bold text-amber-400">0 fraude</span>
-              </div>
-              <div className="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700">
-                <span className="text-[10px] text-slate-400 block uppercase">Offres vérifiées</span>
-                <span className="text-xl font-bold text-emerald-400">100% réelles</span>
-              </div>
-              <div className="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700">
-                <span className="text-[10px] text-slate-400 block uppercase">Temps réponse API IA</span>
-                <span className="text-xl font-bold text-blue-400">&lt; 400ms</span>
-              </div>
-              <div className="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700">
-                <span className="text-[10px] text-slate-400 block uppercase">Conformité RGPD / APDP Bénin</span>
-                <span className="text-xl font-bold text-emerald-400">Validée</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
-              <h4 className="font-bold text-slate-900 text-xs uppercase text-slate-500">Gestion des Utilisateurs</h4>
-              <p className="text-xs text-slate-600">Contrôle des pièces justificatives et attribution des badges vérifiés.</p>
-              <Link href="/services" className="text-xs font-semibold text-brand-600 inline-block pt-1">
-                Examiner les vitrines →
-              </Link>
-            </div>
-
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
-              <h4 className="font-bold text-slate-900 text-xs uppercase text-slate-500">Modération des Annonces</h4>
-              <p className="text-xs text-slate-600">Surveillance des fausses offres d'emploi et des demandes d'argent abusives.</p>
-              <Link href="/emplois" className="text-xs font-semibold text-brand-600 inline-block pt-1">
-                Contrôler les emplois →
-              </Link>
-            </div>
-
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
-              <h4 className="font-bold text-slate-900 text-xs uppercase text-slate-500">Catalogue des Métiers</h4>
-              <p className="text-xs text-slate-600">17 catégories de métiers répertoriées avec filtres territoriaux Bénin/UEMOA.</p>
-              <Link href="/opportunites" className="text-xs font-semibold text-brand-600 inline-block pt-1">
-                Voir l'index complet →
-              </Link>
-            </div>
-          </div>
-        </div>
+      {/* 4. CONSOLE D'ADMINISTRATION RIGOUROUSE (Section 12, 13, 14 - Accessible uniquement au rôle admin authentifié) */}
+      {activeRole === "admin" && isAdmin && (
+        <AdminVerificationConsole />
       )}
     </div>
   );
