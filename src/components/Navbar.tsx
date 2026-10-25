@@ -94,6 +94,10 @@ export function Navbar() {
               Opportunités
             </Link>
 
+            <Link href="/tarifs" className="hover:text-brand-600 transition-colors py-1 font-bold text-slate-800">
+              Tarifs
+            </Link>
+
             <Link href="/dashboard/quotes" className="hover:text-brand-600 transition-colors py-1 flex items-center gap-1">
               <FileText className="w-3.5 h-3.5 text-brand-500" />
               Devis & Factures
@@ -129,6 +133,9 @@ export function Navbar() {
             </Link>
             <Link href="/fournisseurs" className="hover:text-brand-600 transition-colors">
               Fournisseurs
+            </Link>
+            <Link href="/tarifs" className="hover:text-brand-600 transition-colors font-bold">
+              Tarifs
             </Link>
             <Link href="/dashboard/quotes" className="hover:text-brand-600 transition-colors">
               Devis
@@ -263,6 +270,13 @@ export function Navbar() {
               className="p-2.5 rounded-xl bg-slate-50 text-slate-900 hover:bg-brand-50 font-bold text-xs"
             >
               ✨ Opportunités
+            </Link>
+            <Link
+              href="/tarifs"
+              onClick={() => setMobileMenuOpen(false)}
+              className="p-2.5 rounded-xl bg-slate-50 text-slate-900 hover:bg-brand-50 font-bold text-xs"
+            >
+              💎 Tarifs & Services
             </Link>
             <Link
               href="/dashboard/quotes"

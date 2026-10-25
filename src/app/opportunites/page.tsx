@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { 
   Sparkles, 
@@ -19,188 +19,113 @@ import {
   CheckCircle2, 
   ShieldCheck,
   ExternalLink,
+  PlusCircle,
+  FileCheck,
   Tag
 } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
 
-interface EconomicOpportunity {
+interface OpportunityItem {
   id: string;
   title: string;
-  type: 
-    | "emploi" 
-    | "stage" 
-    | "mission" 
-    | "appel_projet" 
-    | "formation" 
-    | "concours" 
-    | "marche" 
-    | "sous_traitance" 
-    | "fournisseur" 
-    | "partenariat" 
-    | "international";
-  organization: string;
-  location: string;
-  country: string;
-  budgetOrGrant?: string;
-  deadline: string;
   description: string;
-  conditions: string[];
-  beginnerFriendly: boolean;
-  officialSource?: string;
-  sourceUrl?: string;
-  isInternational: boolean;
+  budget_amount: number;
+  budget_currency: string;
+  deadline: string | null;
+  location_mode: string;
+  location_country: string;
+  location_city: string | null;
+  skills_required: string[];
+  status: string;
+  created_at: string;
+  profiles?: {
+    full_name: string;
+    company_name: string | null;
+  };
 }
-
-const OPPORTUNITIES_LIST: EconomicOpportunity[] = [
-  {
-    id: "opp-1",
-    title: "Programme d'Accompagnement et Subvention Jeunes PME Agro",
-    type: "concours",
-    organization: "Fonds d'Appui à l'Entrepreneuriat Agricole Bénin",
-    location: "Cotonou & Parakou",
-    country: "Bénin",
-    budgetOrGrant: "Jusqu'à 5 000 000 FCFA de dotation",
-    deadline: "20/11/2026",
-    description: "Appel à candidatures pour financer et accompagner 25 jeunes entrepreneurs béninois actifs dans la transformation agroalimentaire locale.",
-    conditions: ["Entreprise enregistrée au Bénin", "Moins de 35 ans", "Projet à impact direct"],
-    beginnerFriendly: true,
-    officialSource: "Ministère de l'Agriculture et PME",
-    sourceUrl: "https://afrigain.bj/opportunites/agro-2026",
-    isInternational: false,
-  },
-  {
-    id: "opp-2",
-    title: "Appel d'Offres : Numérisation des archives et saisie de registres",
-    type: "marche",
-    organization: "Coopérative Régionale du Littoral",
-    location: "Cotonou",
-    country: "Bénin",
-    budgetOrGrant: "1 800 000 FCFA",
-    deadline: "12/11/2026",
-    description: "Mission de sous-traitance ouverte aux indépendants ou petites agences pour scanner, indexer et classer 4 000 dossiers comptables.",
-    conditions: ["Maîtrise de la suite bureautique", "Disponibilité immédiate", "Garantie de confidentialité"],
-    beginnerFriendly: true,
-    officialSource: "CRL Bénin",
-    isInternational: false,
-  },
-  {
-    id: "opp-3",
-    title: "Formation Pratique Accélérée : Commerce Digital & Vente WhatsApp Business",
-    type: "formation",
-    organization: "Académie Numérique AfriGain",
-    location: "En ligne / À distance",
-    country: "Bénin & UEMOA",
-    budgetOrGrant: "Gratuit (100% pris en charge)",
-    deadline: "30/11/2026",
-    description: "Atelier intensif orienté résultat : apprenez à structurer votre catalogue, lancer vos premières publicités et convertir des prospects en clients payants.",
-    conditions: ["Avoir un smartphone connecté", "Aucun diplôme prérequis"],
-    beginnerFriendly: true,
-    officialSource: "AfriGain Academy",
-    isInternational: false,
-  },
-  {
-    id: "opp-4",
-    title: "Mission Freelance : Développement Interface Mobile React Native",
-    type: "mission",
-    organization: "Fintech Atlantique",
-    location: "Télétravail",
-    country: "International",
-    budgetOrGrant: "650 000 FCFA",
-    deadline: "18/11/2026",
-    description: "Développement des écrans de tableau de bord client avec intégration d'API GraphQL. Contrat de mission court de 4 semaines.",
-    conditions: ["Expérience prouvée sur React ou React Native", "Code propre documenté"],
-    beginnerFriendly: false,
-    officialSource: "Fintech Atlantique via AfriGain",
-    isInternational: true,
-  },
-  {
-    id: "opp-5",
-    title: "Recherche de Distributeurs Régionaux de Produits Bio & Cosmétiques Naturels",
-    type: "partenariat",
-    organization: "BioBénin Laboratoires",
-    location: "Bénin, Togo, Côte d'Ivoire",
-    country: "Afrique de l'Ouest",
-    budgetOrGrant: "Marges commerciales de 25% à 40%",
-    deadline: "Permanent",
-    description: "Opportunité de partenariat commercial pour jeunes commerçants et boutiques souhaitant distribuer une gamme certifiée de beurres de karité et huiles pures.",
-    conditions: ["Point de vente physique ou vente en ligne active", "Première commande test minimale"],
-    beginnerFriendly: true,
-    officialSource: "BioBénin Lab",
-    isInternational: false,
-  },
-  {
-    id: "opp-6",
-    title: "Stage d'Initiation Pratique : Électricité Bâtiment & Solaire",
-    type: "stage",
-    organization: "Solaire Plus Bénin",
-    location: "Abomey-Calavi",
-    country: "Bénin",
-    budgetOrGrant: "Indemnité 90 000 FCFA/mois",
-    deadline: "15/11/2026",
-    description: "Immersion sur chantiers avec un tuteur expérimenté pour apprendre la pose d'onduleurs, le câblage et la maintenance d'installations solaires.",
-    conditions: ["Motivation et respect des consignes de sécurité", "Ouvert aux débutants"],
-    beginnerFriendly: true,
-    officialSource: "Solaire Plus Bénin",
-    isInternational: false,
-  },
-];
 
 const TYPE_FILTERS = [
   { id: "all", label: "Toutes les opportunités", icon: Layers },
-  { id: "emploi", label: "Offres d'emploi", icon: Briefcase },
-  { id: "stage", label: "Stages & Apprentissage", icon: GraduationCap },
-  { id: "mission", label: "Missions Indépendantes", icon: Target },
-  { id: "concours", label: "Concours & Subventions", icon: Trophy },
-  { id: "formation", label: "Formations Pratiques", icon: Sparkles },
-  { id: "marche", label: "Marchés & Appels d'offres", icon: FileSpreadsheet },
-  { id: "partenariat", label: "Partenariats & Distribution", icon: Building2 },
+  { id: "remote", label: "Télétravail & Distance", icon: Globe2 },
+  { id: "on_site", label: "Sur place (Local)", icon: MapPin },
+  { id: "hybrid", label: "Hybride", icon: Target },
 ];
 
 export default function OpportunitesPage() {
+  const [opportunities, setOpportunities] = useState<OpportunityItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState("all");
-  const [onlyBeginner, setOnlyBeginner] = useState(false);
-  const [onlyInternational, setOnlyInternational] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filteredOpportunities = OPPORTUNITIES_LIST.filter((item) => {
+  useEffect(() => {
+    async function loadRealOpportunities() {
+      setIsLoading(true);
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("job_posts")
+        .select(`
+          id, title, description, budget_amount, budget_currency, deadline,
+          location_mode, location_country, location_city, skills_required, status, created_at,
+          profiles:client_id (full_name, company_name)
+        `)
+        .eq("status", "published")
+        .order("created_at", { ascending: false });
+
+      if (data) {
+        setOpportunities(data as any);
+      }
+      setIsLoading(false);
+    }
+    loadRealOpportunities();
+  }, []);
+
+  const filteredOpportunities = opportunities.filter((item) => {
     const matchesSearch =
       item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.organization.toLowerCase().includes(searchTerm.toLowerCase());
+      (item.profiles?.company_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.location_city || "").toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesType = selectedType === "all" || item.type === selectedType;
-    const matchesBeginner = !onlyBeginner || item.beginnerFriendly;
-    const matchesInternational = !onlyInternational || item.isInternational;
-
-    return matchesSearch && matchesType && matchesBeginner && matchesInternational;
+    const matchesType = selectedType === "all" || item.location_mode === selectedType;
+    return matchesSearch && matchesType;
   });
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
       {/* En-tête */}
-      <div className="border-b border-slate-200 pb-6">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 text-brand-800 text-xs font-semibold mb-2">
-          <Sparkles className="w-3.5 h-3.5 text-brand-600" />
-          Section 13 du Référentiel AfriGain
+      <div className="border-b border-slate-200 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 text-brand-800 text-xs font-semibold mb-2">
+            <Sparkles className="w-3.5 h-3.5 text-brand-600" />
+            Opportunités Réelles • Données Vérifiées Supabase
+          </div>
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+            Index des Opportunités Économiques
+          </h1>
+          <p className="text-slate-600 text-xs sm:text-sm mt-1 max-w-2xl">
+            Missions rémunérées, emplois, prestations freelance et marchés réels publiés par les entreprises et recruteurs sur AfriGain.
+          </p>
         </div>
-        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-          Index des Opportunités Économiques
-        </h1>
-        <p className="text-slate-600 text-sm mt-1 max-w-3xl">
-          Espace unifié recensant les emplois, stages, missions freelances, subventions, appels d'offres et programmes de distribution vérifiés au Bénin, en Afrique et à l'international.
-        </p>
+
+        <Link
+          href="/missions/create"
+          className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs self-start md:self-auto shrink-0"
+        >
+          <PlusCircle className="w-4 h-4" />
+          Publier une opportunité
+        </Link>
       </div>
 
       {/* Barre de recherche et filtres de types */}
       <div className="space-y-4">
         <div className="relative">
-          <Search className="w-5 h-5 text-slate-400 absolute left-3.5 top-3.5" />
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
           <input
             type="text"
-            placeholder="Rechercher une opportunité, un appel d'offres, un concours, une formation..."
+            placeholder="Rechercher par mot-clé, compétence ou ville (ex: Développeur, Cotonou, Gestion)..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-sm"
+            className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-xs"
           />
         </div>
 
@@ -213,9 +138,9 @@ export default function OpportunitesPage() {
               <button
                 key={filter.id}
                 onClick={() => setSelectedType(filter.id)}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
                   active
-                    ? "bg-brand-600 text-white shadow-sm"
+                    ? "bg-slate-900 text-white shadow-xs"
                     : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
                 }`}
               >
@@ -225,114 +150,80 @@ export default function OpportunitesPage() {
             );
           })}
         </div>
-
-        {/* Filtres secondaires */}
-        <div className="flex flex-wrap items-center gap-4 pt-2">
-          <label className="inline-flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg">
-            <input
-              type="checkbox"
-              checked={onlyBeginner}
-              onChange={(e) => setOnlyBeginner(e.target.checked)}
-              className="rounded text-brand-600 focus:ring-brand-500 w-4 h-4"
-            />
-            <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-            Accessible aux débutants sans expérience
-          </label>
-
-          <label className="inline-flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-lg">
-            <input
-              type="checkbox"
-              checked={onlyInternational}
-              onChange={(e) => setOnlyInternational(e.target.checked)}
-              className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4"
-            />
-            <Globe2 className="w-3.5 h-3.5 text-blue-600" />
-            Opportunités Internationales
-          </label>
-        </div>
       </div>
 
-      {/* Liste des opportunités */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {filteredOpportunities.map((opp) => (
-          <div
-            key={opp.id}
-            className="bg-white rounded-2xl border border-slate-200 p-6 hover:border-brand-500 hover:shadow-md transition-all flex flex-col justify-between space-y-4"
-          >
-            <div className="space-y-3">
-              <div className="flex items-start justify-between gap-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-brand-50 text-brand-700 border border-brand-100">
-                  {opp.type.replace("_", " ")}
-                </span>
-                {opp.beginnerFriendly && (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-                    Débutants bienvenus
+      {/* Liste des opportunités réelles */}
+      {isLoading ? (
+        <div className="py-16 text-center text-xs text-slate-400">
+          Chargement des opportunités vérifiées depuis Supabase...
+        </div>
+      ) : filteredOpportunities.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-3">
+          <Briefcase className="w-10 h-10 text-brand-500 mx-auto" />
+          <h4 className="font-bold text-slate-900 text-base">Aucune opportunité disponible dans cette sélection</h4>
+          <p className="text-xs text-slate-500 max-w-md mx-auto">
+            Toutes les opportunités affichées sur AfriGain proviennent d'offres réelles soumises par des recruteurs et clients partenaires.
+          </p>
+          <div className="pt-2">
+            <Link
+              href="/missions/create"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs"
+            >
+              Publier la première offre
+            </Link>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredOpportunities.map((opp) => (
+            <div
+              key={opp.id}
+              className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs hover:border-brand-500/60 transition-all flex flex-col justify-between space-y-4"
+            >
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-brand-700 bg-brand-50 px-2 py-0.5 rounded-md border border-brand-200 uppercase">
+                    {opp.location_mode === "remote" ? "À distance" : opp.location_mode === "hybrid" ? "Hybride" : "Sur site"}
                   </span>
+                  <span className="text-xs font-black text-slate-900">
+                    {opp.budget_amount.toLocaleString("fr-FR")} {opp.budget_currency}
+                  </span>
+                </div>
+
+                <h3 className="font-bold text-slate-900 text-sm leading-snug">{opp.title}</h3>
+
+                <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed">
+                  {opp.description}
+                </p>
+
+                {opp.skills_required && opp.skills_required.length > 0 && (
+                  <div className="flex flex-wrap gap-1 pt-1">
+                    {opp.skills_required.slice(0, 3).map((s, idx) => (
+                      <span key={idx} className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-medium">
+                        {s}
+                      </span>
+                    ))}
+                  </div>
                 )}
               </div>
 
-              <h3 className="text-base font-bold text-slate-900 leading-snug">
-                {opp.title}
-              </h3>
-
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600">
-                <span className="font-semibold text-slate-800 flex items-center gap-1">
-                  <Building2 className="w-3.5 h-3.5 text-slate-400" />
-                  {opp.organization}
+              <div className="border-t border-slate-100 pt-3 flex items-center justify-between text-xs">
+                <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                  <MapPin className="w-3 h-3 text-slate-400" />
+                  {opp.location_city ? `${opp.location_city}, ` : ""}{opp.location_country}
                 </span>
-                <span className="flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                  {opp.location}
-                </span>
-              </div>
 
-              {opp.budgetOrGrant && (
-                <div className="text-xs font-bold text-brand-700 bg-brand-50/50 p-2 rounded-lg border border-brand-100/60">
-                  💰 {opp.budgetOrGrant}
-                </div>
-              )}
-
-              <p className="text-xs text-slate-600 leading-relaxed">
-                {opp.description}
-              </p>
-
-              <div className="space-y-1 pt-1">
-                <span className="text-[11px] font-semibold text-slate-700 block">Conditions clés :</span>
-                <ul className="text-xs text-slate-500 space-y-0.5 list-disc list-inside">
-                  {opp.conditions.map((cond, idx) => (
-                    <li key={idx}>{cond}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            <div className="border-t border-slate-100 pt-3 flex items-center justify-between text-xs text-slate-500">
-              <span className="flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                Date limite : {opp.deadline}
-              </span>
-
-              {opp.sourceUrl ? (
-                <a
-                  href={opp.sourceUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 font-semibold text-brand-600 hover:text-brand-700"
-                >
-                  Modalités officielles <ExternalLink className="w-3 h-3" />
-                </a>
-              ) : (
                 <Link
-                  href="/missions"
-                  className="inline-flex items-center gap-1 font-semibold text-brand-600 hover:text-brand-700"
+                  href={`/missions`}
+                  className="text-xs font-bold text-brand-600 hover:text-brand-700 inline-flex items-center gap-1"
                 >
-                  Candidater <ArrowRight className="w-3 h-3" />
+                  Postuler <ArrowRight className="w-3 h-3" />
                 </Link>
-              )}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

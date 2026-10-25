@@ -54,6 +54,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/tarifs" className="hover:text-white text-brand-400 font-bold transition-colors">
+                  💎 Tarifs et Services (Formules & Sponsorisation)
+                </Link>
+              </li>
+              <li>
                 <Link href="/fournisseurs" className="hover:text-white transition-colors">
                   Marketplace Fournisseurs B2B
                 </Link>
