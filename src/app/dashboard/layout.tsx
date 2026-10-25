@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { ShieldAlert, RefreshCw, CheckCircle2, ArrowRight } from "lucide-react";
+import { ShieldAlert, RefreshCw, CheckCircle2, ArrowRight, UserCheck, LogIn, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 export default function DashboardLayout({
@@ -15,8 +15,7 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const [user, setUser] = useState<any>(null);
   const [checking, setChecking] = useState(true);
-  const [resending, setResending] = useState(false);
-  const [resendSuccess, setResendSuccess] = useState(false);
+  const [isGuestMode, setIsGuestMode] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -26,19 +25,16 @@ export default function DashboardLayout({
         const { data: { user } } = await supabase.auth.getUser();
 
         if (!user) {
-          router.push(`/auth/login?next=${encodeURIComponent(pathname)}`);
-          return;
-        }
-
-        setUser(user);
-
-        // Si l'e-mail n'est pas confirmé, bloquer et rediriger vers la page de vérification
-        if (!user.email_confirmed_at) {
-          router.push(`/auth/verify-email?email=${encodeURIComponent(user.email || "")}&required=1`);
-          return;
+          // Mode invité / démo pour permettre l'exploration fluide des outils de gestion
+          setIsGuestMode(true);
+          setUser(null);
+        } else {
+          setUser(user);
+          setIsGuestMode(false);
         }
       } catch (err) {
         console.error("Erreur vérification session dashboard:", err);
+        setIsGuestMode(true);
       } finally {
         setChecking(false);
       }
@@ -47,12 +43,12 @@ export default function DashboardLayout({
     verifySession();
 
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session?.user) {
-        router.push("/auth/login");
-      } else if (!session.user.email_confirmed_at) {
-        router.push(`/auth/verify-email?email=${encodeURIComponent(session.user.email || "")}&required=1`);
-      } else {
+      if (session?.user) {
         setUser(session.user);
+        setIsGuestMode(false);
+      } else {
+        setUser(null);
+        setIsGuestMode(true);
       }
     });
 
@@ -61,40 +57,12 @@ export default function DashboardLayout({
     };
   }, [router, pathname]);
 
-  const handleQuickResend = async () => {
-    if (!user?.email || resending) return;
-    setResending(true);
-    setResendSuccess(false);
-
-    try {
-      const supabase = createClient();
-      const origin = typeof window !== "undefined" ? window.location.origin : "";
-      const emailRedirectTo = `${origin}/auth/confirm?next=/dashboard`;
-
-      const { error } = await supabase.auth.resend({
-        type: "signup",
-        email: user.email,
-        options: {
-          emailRedirectTo,
-        },
-      });
-
-      if (!error) {
-        setResendSuccess(true);
-      }
-    } catch (err) {
-      console.error("Erreur renvoi rapide:", err);
-    } finally {
-      setResending(false);
-    }
-  };
-
   if (checking) {
     return (
       <div className="min-h-[75vh] flex items-center justify-center">
         <div className="text-center space-y-3">
           <div className="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-xs text-slate-500 font-medium">Sécurisation et vérification des accès...</p>
+          <p className="text-xs text-slate-500 font-medium">Chargement de votre espace de travail...</p>
         </div>
       </div>
     );
@@ -102,35 +70,46 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-slate-50/50">
-      {user && !user.email_confirmed_at && (
-        <div className="bg-amber-500 text-white px-4 py-2.5 text-xs">
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <ShieldAlert className="w-4 h-4 flex-shrink-0" />
-              <span>
-                <strong>Adresse e-mail non vérifiée :</strong> Votre compte ({user.email}) est en attente de confirmation. Certaines actions sont restreintes.
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handleQuickResend}
-                disabled={resending || resendSuccess}
-                className="px-2.5 py-1 bg-white/20 hover:bg-white/30 rounded font-semibold text-white transition-colors flex items-center gap-1.5"
-              >
-                <RefreshCw className={`w-3 h-3 ${resending ? "animate-spin" : ""}`} />
-                {resendSuccess ? "E-mail envoyé !" : resending ? "Envoi..." : "Renvoyer le lien"}
-              </button>
-              <Link
-                href={`/auth/verify-email?email=${encodeURIComponent(user.email || "")}&required=1`}
-                className="underline font-semibold hover:text-amber-100"
-              >
-                En savoir plus
-              </Link>
-            </div>
+      {/* Bannière Mode Invité si non connecté */}
+      {isGuestMode && (
+        <div className="bg-amber-500 text-white px-4 py-2 text-xs font-semibold flex flex-col sm:flex-row items-center justify-between gap-2 shadow-sm">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-amber-200" />
+            <span>Vous explorez les outils AfriGain en accès libre. Pour sauvegarder vos devis et candidatures, connectez-vous.</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/auth/login?next=${encodeURIComponent(pathname)}`}
+              className="px-3 py-1 bg-white text-amber-800 rounded-lg text-xs font-bold hover:bg-amber-50 transition-colors"
+            >
+              Se connecter
+            </Link>
+            <Link
+              href="/auth/register"
+              className="px-3 py-1 bg-amber-600 text-white rounded-lg text-xs font-bold hover:bg-amber-700 transition-colors"
+            >
+              Créer un compte
+            </Link>
           </div>
         </div>
       )}
+
+      {/* Avertissement email si connecté mais email non vérifié */}
+      {user && !user.email_confirmed_at && (
+        <div className="bg-amber-50 border-b border-amber-200 px-4 py-2.5 text-xs text-amber-800 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="w-4 h-4 text-amber-600" />
+            <span>Votre adresse e-mail n'a pas encore été confirmée. Veuillez vérifier votre boîte pour activer toutes les fonctionnalités.</span>
+          </div>
+          <Link
+            href={`/auth/verify-email?email=${encodeURIComponent(user.email || "")}`}
+            className="font-bold underline hover:text-amber-900"
+          >
+            Vérifier maintenant
+          </Link>
+        </div>
+      )}
+
       {children}
     </div>
   );

@@ -7,9 +7,9 @@ import { Footer } from "@/components/Footer";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "AFriGain — Missions, Gestion & Revenus pour Entrepreneurs Africains",
+  title: "AFriGain — Plateforme Intelligente de Transformation Économique",
   description:
-    "Plateforme de mise en relation, outils de devis/facturation et assistant IA pour jeunes entrepreneurs et entreprises clientes. Pilote au Bénin & international.",
+    "Construire une plateforme intelligente de transformation économique pour les jeunes, les entrepreneurs et les entreprises en Afrique et à l’international. Emplois, missions, vitrines de talents, devis/factures et AfriGain AI.",
 };
 
 export default function RootLayout({

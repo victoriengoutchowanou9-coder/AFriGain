@@ -1,121 +1,153 @@
 import Link from "next/link";
-import { ShieldCheck, Globe, Heart } from "lucide-react";
+import { ShieldCheck, Globe, Heart, CheckCircle2 } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="bg-slate-900 text-slate-300 pt-12 pb-8 border-t border-slate-800">
+    <footer className="bg-slate-900 text-slate-300 pt-14 pb-8 border-t border-slate-800 text-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
-          {/* Col 1 */}
-          <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8 mb-12">
+          {/* Col 1 : Marque & Vision */}
+          <div className="space-y-4 md:col-span-2">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center text-white font-bold text-lg">
                 AF
               </div>
-              <span className="font-bold text-xl text-white">AFriGain</span>
+              <span className="font-extrabold text-xl text-white">AFriGain</span>
             </div>
-            <p className="text-sm text-slate-400 leading-relaxed">
-              La plateforme pour les jeunes entrepreneurs et indépendants. Trouvez des missions réelles, facturez simplement et développez des revenus durables.
+            <p className="text-slate-400 leading-relaxed max-w-sm">
+              Plateforme intelligente de transformation économique. Nous connectons les jeunes, les artisans, les indépendants, les entrepreneurs et les entreprises au Bénin, en Afrique et à l'international.
             </p>
-            <div className="flex items-center gap-2 text-xs text-brand-400 font-medium bg-brand-950/60 border border-brand-800/60 px-3 py-1.5 rounded-full w-fit">
+            <div className="flex items-center gap-2 text-brand-400 font-medium bg-brand-950/60 border border-brand-800/60 px-3 py-1.5 rounded-full w-fit">
               <ShieldCheck className="w-4 h-4" />
-              Piloté au Bénin • Architecture internationale
+              Piloté au Bénin • Déploiement UEMOA & International
+            </div>
+            <div className="text-[11px] text-emerald-400 flex items-center gap-1.5 pt-1">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              Principe : Des compétences aux opportunités réelles sans fausses promesses.
             </div>
           </div>
 
-          {/* Col 2 */}
+          {/* Col 2 : Opportunités & Marchés */}
           <div>
-            <h4 className="text-sm font-semibold uppercase tracking-wider text-slate-100 mb-4">
-              Marketplace
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-100 mb-4">
+              Opportunités & Marchés
             </h4>
-            <ul className="space-y-2.5 text-sm text-slate-400">
+            <ul className="space-y-2.5 text-slate-400">
+              <li>
+                <Link href="/emplois" className="hover:text-white transition-colors">
+                  Emplois par Métier & Région
+                </Link>
+              </li>
               <li>
                 <Link href="/missions" className="hover:text-white transition-colors">
-                  Trouver une mission
+                  Missions Rémunérées
                 </Link>
               </li>
               <li>
                 <Link href="/services" className="hover:text-white transition-colors">
-                  Catalogue de services
+                  Catalogue Services & Talents
                 </Link>
               </li>
               <li>
-                <Link href="/auth/register" className="hover:text-white transition-colors">
-                  Recruter un prestataire
+                <Link href="/opportunites" className="hover:text-white transition-colors">
+                  Index des Opportunités Économiques
                 </Link>
               </li>
               <li>
-                <Link href="/categories" className="hover:text-white transition-colors">
-                  Catégories d'activités
+                <Link href="/fournisseurs" className="hover:text-white transition-colors">
+                  Marketplace Fournisseurs B2B
+                </Link>
+              </li>
+              <li>
+                <Link href="/entreprises" className="hover:text-white transition-colors">
+                  Annuaire des Entreprises
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Col 3 */}
+          {/* Col 3 : Outils Professionnels & IA */}
           <div>
-            <h4 className="text-sm font-semibold uppercase tracking-wider text-slate-100 mb-4">
-              Outils de Gestion
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-100 mb-4">
+              Outils & AfriGain AI
             </h4>
-            <ul className="space-y-2.5 text-sm text-slate-400">
+            <ul className="space-y-2.5 text-slate-400">
+              <li>
+                <Link href="/dashboard/coach-ia" className="hover:text-white transition-colors text-amber-400 font-medium">
+                  🤖 Business Coach IA
+                </Link>
+              </li>
               <li>
                 <Link href="/dashboard/quotes" className="hover:text-white transition-colors">
-                  Créateur de devis PDF
+                  Créateur de Devis PDF
                 </Link>
               </li>
               <li>
                 <Link href="/dashboard/invoices" className="hover:text-white transition-colors">
-                  Facturation et reçus
+                  Facturation & Encaissements
                 </Link>
               </li>
               <li>
                 <Link href="/dashboard/coach-ia" className="hover:text-white transition-colors">
-                  Business Coach IA
+                  Calculateur de Prix & Marge
+                </Link>
+              </li>
+              <li>
+                <Link href="/dashboard/coach-ia" className="hover:text-white transition-colors">
+                  Générateur de CV Professionnel
                 </Link>
               </li>
               <li>
                 <Link href="/dashboard" className="hover:text-white transition-colors">
-                  Suivi des encaissements
+                  Mon Espace (Tableau de bord)
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Col 4 */}
+          {/* Col 4 : Parcours Débutants & Sécurité */}
           <div>
-            <h4 className="text-sm font-semibold uppercase tracking-wider text-slate-100 mb-4">
-              Confiance & Légal
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-100 mb-4">
+              Débutants & Confiance
             </h4>
-            <ul className="space-y-2.5 text-sm text-slate-400">
+            <ul className="space-y-2.5 text-slate-400">
               <li>
-                <span className="text-xs text-emerald-400 block mb-1">
-                  ✓ Zéro promesse de gains garantis
+                <Link href="/commencer" className="hover:text-white transition-colors text-emerald-400 font-semibold">
+                  ✨ Je commence sans expérience
+                </Link>
+              </li>
+              <li>
+                <Link href="/commencer" className="hover:text-white transition-colors">
+                  Guides d'action anti-arnaques
+                </Link>
+              </li>
+              <li>
+                <Link href="/commencer" className="hover:text-white transition-colors">
+                  Comment fixer son premier prix
+                </Link>
+              </li>
+              <li>
+                <Link href="/services" className="hover:text-white transition-colors">
+                  Signalement de contenu suspect
+                </Link>
+              </li>
+              <li>
+                <span className="text-[11px] text-slate-500 block pt-1">
+                  Assistance : support@afrigain.bj
                 </span>
-              </li>
-              <li>
-                <Link href="/legal/terms" className="hover:text-white transition-colors">
-                  Conditions Générales d'Utilisation
-                </Link>
-              </li>
-              <li>
-                <Link href="/legal/privacy" className="hover:text-white transition-colors">
-                  Politique de Confidentialité
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="hover:text-white transition-colors">
-                  Support & Contact
-                </Link>
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
-          <p>© {new Date().getFullYear()} AFriGain. Tous droits réservés.</p>
-          <p className="text-center sm:text-right">
-            Conçu pour l'émancipation économique des talents africains.
-          </p>
+        {/* Bas de page */}
+        <div className="border-t border-slate-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
+          <p>© 2026 AFriGain. Plateforme de transformation économique. Tous droits réservés.</p>
+          <div className="flex items-center gap-4">
+            <span>Bénin (Cotonou, Parakou, Porto-Novo, Calavi)</span>
+            <span>•</span>
+            <span>Afrique de l'Ouest & International</span>
+          </div>
         </div>
       </div>
     </footer>
