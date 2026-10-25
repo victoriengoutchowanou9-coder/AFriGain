@@ -48,48 +48,9 @@ interface QuoteItem {
   lines: QuoteLine[];
 }
 
-const DEFAULT_SAMPLE_QUOTES: QuoteItem[] = [
-  {
-    id: "q-sample-1",
-    number: "DEV-2026-001",
-    clientName: "Boutique Wax Élégance Cotonou",
-    clientEmail: "contact@wax-elegance.bj",
-    clientPhone: "+229 97 11 22 33",
-    date: "22/10/2026",
-    validUntil: "21/11/2026",
-    totalHT: 120000,
-    discountPercent: 0,
-    taxRate: 0,
-    totalTTC: 120000,
-    currency: "XOF",
-    status: "accepted",
-    lines: [
-      { id: "l1", description: "Conception charte graphique et logo vectoriel", quantity: 1, unitPrice: 70000 },
-      { id: "l2", description: "Création de 10 modèles de publications WhatsApp/Instagram", quantity: 1, unitPrice: 50000 },
-    ],
-  },
-  {
-    id: "q-sample-2",
-    number: "DEV-2026-002",
-    clientName: "Cabinet Conseil Atlantique",
-    clientEmail: "direction@atlantique-conseil.bj",
-    date: "24/10/2026",
-    validUntil: "23/11/2026",
-    totalHT: 250000,
-    discountPercent: 5,
-    taxRate: 18,
-    totalTTC: 280250,
-    currency: "XOF",
-    status: "sent",
-    lines: [
-      { id: "l3", description: "Développement application web de gestion interne", quantity: 1, unitPrice: 250000 },
-    ],
-  },
-];
-
 export default function QuotesPage() {
   const router = useRouter();
-  const [quotes, setQuotes] = useState<QuoteItem[]>(DEFAULT_SAMPLE_QUOTES);
+  const [quotes, setQuotes] = useState<QuoteItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -144,7 +105,7 @@ export default function QuotesPage() {
                 unitPrice: Number(l.unit_price) || 0,
               })),
             }));
-            setQuotes([...formatted, ...DEFAULT_SAMPLE_QUOTES]);
+            setQuotes(formatted);
             setLoading(false);
             return;
           }
@@ -289,7 +250,16 @@ export default function QuotesPage() {
         </div>
 
         <div className="divide-y divide-slate-100">
-          {quotes.map((q) => (
+          {quotes.length === 0 ? (
+            <div className="p-12 text-center space-y-3">
+              <FileText className="w-10 h-10 text-slate-300 mx-auto" />
+              <h4 className="font-bold text-slate-800 text-sm">Aucun devis créé pour le moment</h4>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                Cliquez sur "Créer un nouveau devis" ci-dessus pour générer un devis conforme et l'envoyer à votre client.
+              </p>
+            </div>
+          ) : (
+            quotes.map((q) => (
             <div key={q.id} className="p-4 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/50 transition-colors">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
@@ -347,7 +317,8 @@ export default function QuotesPage() {
                 </div>
               </div>
             </div>
-          ))}
+          ))
+          )}
         </div>
       </div>
 

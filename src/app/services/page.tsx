@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { 
   Check, 
@@ -54,138 +54,58 @@ interface TalentProfile {
   }[];
 }
 
-const INITIAL_TALENTS: TalentProfile[] = [
-  {
-    id: "tal-1",
-    name: "Awa Tossou",
-    metier: "couture",
-    metierLabel: "Couture, Stylisme & Artisanat d'Art",
-    headline: "Créatrice de mode écoresponsable & confections sur mesure",
-    city: "Cotonou",
-    country: "Bénin",
-    languages: ["Français", "Fon", "Anglais basique"],
-    availability: "immediate",
-    rating: 4.9,
-    completedMissions: 28,
-    verified: true,
-    startingPrice: 15000,
-    currency: "XOF",
-    bio: "Styliste et artisane modéliste avec 6 ans d'expérience. Spécialisée dans les tenues de cérémonie en wax et les uniformes professionnels de qualité supérieure.",
-    skills: ["Coupe sur mesure", "Teinture artisanale", "Broderie fine", "Patronage industriel"],
-    references: "Habilleuse officielle de 3 festivals culturels à Cotonou et Ouidah.",
-    phone: "+229 97 12 34 56",
-    email: "awa.tossou@mode.bj",
-    realisations: [
-      {
-        title: "Collection de vestes en tissu Kente et lin local",
-        description: "Ensemble de 20 pièces pour cadres et dirigeants d'entreprises.",
-        category: "Couture Homme/Femme",
-      },
-      {
-        title: "Uniformes d'accueil pour chaîne hôtelière",
-        description: "Conception complète de 60 uniformes élégants et résistants aux lavages intensifs.",
-        category: "Confection Pro",
-      },
-    ],
-  },
-  {
-    id: "tal-2",
-    name: "Marc Alapini",
-    metier: "informatique",
-    metierLabel: "Développement Web & Applications Mobile",
-    headline: "Ingénieur logiciel React / Next.js & intégrateur de paiement Mobile Money",
-    city: "Abomey-Calavi",
-    country: "Bénin",
-    languages: ["Français", "Anglais professionnel"],
-    availability: "immediate",
-    rating: 5.0,
-    completedMissions: 19,
-    verified: true,
-    startingPrice: 120000,
-    currency: "XOF",
-    bio: "Développeur passionné par les solutions pratiques pour entreprises africaines : boutiques en ligne légères, sites vitrines professionnels et passerelles de paiement.",
-    skills: ["React", "Next.js", "TypeScript", "PostgreSQL", "APIs MTN/Moov Money", "SEO"],
-    references: "Plateforme e-commerce artisanale avec 1 200 utilisateurs actifs par mois.",
-    phone: "+229 96 44 88 00",
-    email: "marc.alapini@dev.bj",
-    realisations: [
-      {
-        title: "Boutique en ligne avec paiement par QR Code",
-        description: "Application PWA ultra-rapide fonctionnant même sur réseau 3G faible.",
-        category: "E-Commerce",
-      },
-      {
-        title: "Tableau de bord de gestion d'inventaire TPE",
-        description: "Outil complet sans abonnement récurrent pour petits commerçants.",
-        category: "Logiciel SaaS",
-      },
-    ],
-  },
-  {
-    id: "tal-3",
-    name: "Roland Hounnou",
-    metier: "industrie",
-    metierLabel: "Menuiserie Moderne, Ébénisterie & Agencement",
-    headline: "Artisan menuisier bois massif & mobilier de bureau ergonomique",
-    city: "Porto-Novo",
-    country: "Bénin",
-    languages: ["Français", "Gun", "Yoruba"],
-    availability: "part_time",
-    rating: 4.8,
-    completedMissions: 15,
-    verified: true,
-    startingPrice: 45000,
-    currency: "XOF",
-    bio: "Conception de meubles durables en essences de bois locales certifiées (Iroko, Teck). Aménagement de magasins, bureaux et espaces de coworking.",
-    skills: ["Menuiserie bois massif", "Assemblage traditionnel", "Finition vernis mat écologique", "Plans 3D"],
-    references: "Équipement complet de 4 cabinets médicaux et 2 restaurants à Porto-Novo.",
-    phone: "+229 95 66 11 22",
-    email: "roland.hounnou@bois.bj",
-    realisations: [
-      {
-        title: "Bureaux modulables pour espace de coworking",
-        description: "12 postes de travail en Teck avec passages de câbles intégrés.",
-        category: "Mobilier Bureau",
-      },
-    ],
-  },
-  {
-    id: "tal-4",
-    name: "Bénédicte Kpadonou",
-    metier: "design",
-    metierLabel: "Design Graphique, Branding & Identité Visuelle",
-    headline: "Graphiste & créatrice de chartes graphiques pour marques africaines",
-    city: "Cotonou",
-    country: "Bénin",
-    languages: ["Français", "Anglais"],
-    availability: "immediate",
-    rating: 4.9,
-    completedMissions: 34,
-    verified: true,
-    startingPrice: 30000,
-    currency: "XOF",
-    bio: "J'aide les jeunes créateurs d'entreprises et commerçants à se démarquer grâce à des logos professionnels, des étiquettes packaging conformes et des visuels publicitaires captivants.",
-    skills: ["Illustrator", "Photoshop", "Packaging", "Identité de marque", "Réseaux Sociaux"],
-    references: "Création de marque pour 8 marques agroalimentaires primées au Bénin.",
-    phone: "+229 94 33 22 11",
-    email: "benedicte@branding.bj",
-    realisations: [
-      {
-        title: "Packaging gamme de thés et infusions bios",
-        description: "Design des étiquettes, boîtes en carton et visuels publicitaires.",
-        category: "Packaging",
-      },
-    ],
-  },
-];
-
 export default function ServicesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMetier, setSelectedMetier] = useState("all");
   const [selectedCity, setSelectedCity] = useState("all");
   const [onlyVerified, setOnlyVerified] = useState(false);
 
-  const [talents, setTalents] = useState<TalentProfile[]>(INITIAL_TALENTS);
+  const [talents, setTalents] = useState<TalentProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadRealTalents() {
+      setLoading(true);
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("role", "entrepreneur")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+
+      if (data && data.length > 0) {
+        const mapped = data.map((t) => ({
+          id: t.id,
+          name: t.full_name,
+          metier: t.category || "informatique",
+          metierLabel: t.category || "Prestation de Services",
+          headline: t.headline || t.bio || "Prestataire indépendant vérifié sur AfriGain.",
+          city: t.city || "Cotonou",
+          country: t.country || "Bénin",
+          languages: ["Français"],
+          availability: "immediate" as const,
+          rating: Number(t.average_rating) || 5.0,
+          completedMissions: t.completed_missions_count || 0,
+          verified: t.verification_status === "verified",
+          startingPrice: 10000,
+          currency: t.currency || "XOF",
+          bio: t.bio || "Prestations de qualité réalisées selon devis et engagement mutuel.",
+          skills: t.skills || [],
+          references: "Inscrit sur AfriGain",
+          phone: t.phone || "Non communiqué",
+          email: t.email,
+          realisations: [],
+        }));
+        setTalents(mapped);
+      } else {
+        setTalents([]);
+      }
+      setLoading(false);
+    }
+
+    loadRealTalents();
+  }, []);
 
   // Modale Contact & Demande de Devis
   const [contactTalent, setContactTalent] = useState<TalentProfile | null>(null);
@@ -369,7 +289,15 @@ export default function ServicesPage() {
 
       {/* Grille des Talents (Section 6) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {filteredTalents.map((talent) => (
+        {filteredTalents.length === 0 ? (
+          <div className="md:col-span-2 bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-3">
+            <Sparkles className="w-10 h-10 text-brand-500 mx-auto" />
+            <h4 className="font-bold text-slate-900 text-base">Aucun prestataire dans cette sélection</h4>
+            <p className="text-xs text-slate-500 max-w-md mx-auto">
+              Toutes les données de démonstration ont été retirées. Les prestataires et artisans inscrits apparaîtront ici.
+            </p>
+          </div>
+        ) : filteredTalents.map((talent) => (
           <div
             key={talent.id}
             className="bg-white rounded-3xl border border-slate-200 p-6 hover:border-brand-500 hover:shadow-md transition-all flex flex-col justify-between space-y-5"

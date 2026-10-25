@@ -40,46 +40,8 @@ interface InvoiceItem {
   items: { description: string; quantity: number; unitPrice: number }[];
 }
 
-const DEFAULT_SAMPLE_INVOICES: InvoiceItem[] = [
-  {
-    id: "inv-sample-1",
-    number: "FAC-2026-001",
-    clientName: "Boutique Wax Élégance Cotonou",
-    clientEmail: "contact@wax-elegance.bj",
-    clientPhone: "+229 97 11 22 33",
-    issueDate: "20/10/2026",
-    dueDate: "05/11/2026",
-    totalHT: 120000,
-    totalTTC: 120000,
-    currency: "XOF",
-    status: "paid_verified",
-    paymentMethod: "MTN Mobile Money",
-    paymentRef: "MTN-TX-88392019",
-    items: [
-      { description: "Conception charte graphique et logo vectoriel", quantity: 1, unitPrice: 70000 },
-      { description: "Création de 10 modèles de publications WhatsApp", quantity: 1, unitPrice: 50000 },
-    ],
-  },
-  {
-    id: "inv-sample-2",
-    number: "FAC-2026-002",
-    clientName: "Cabinet Conseil Atlantique",
-    clientEmail: "direction@atlantique-conseil.bj",
-    clientPhone: "+229 95 44 22 11",
-    issueDate: "24/10/2026",
-    dueDate: "28/10/2026",
-    totalHT: 250000,
-    totalTTC: 250000,
-    currency: "XOF",
-    status: "pending",
-    items: [
-      { description: "Acompte 50% développement application web", quantity: 1, unitPrice: 250000 },
-    ],
-  },
-];
-
 export default function InvoicesPage() {
-  const [invoices, setInvoices] = useState<InvoiceItem[]>(DEFAULT_SAMPLE_INVOICES);
+  const [invoices, setInvoices] = useState<InvoiceItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Modale Enregistrement Paiement
@@ -130,7 +92,7 @@ export default function InvoicesPage() {
                 unitPrice: Number(l.unit_price) || 0,
               })),
             }));
-            setInvoices([...formatted, ...DEFAULT_SAMPLE_INVOICES]);
+            setInvoices(formatted);
             setLoading(false);
             return;
           }
@@ -275,7 +237,16 @@ export default function InvoicesPage() {
         </div>
 
         <div className="divide-y divide-slate-100">
-          {invoices.map((inv) => (
+          {invoices.length === 0 ? (
+            <div className="p-12 text-center space-y-3">
+              <FileText className="w-10 h-10 text-slate-300 mx-auto" />
+              <h4 className="font-bold text-slate-800 text-sm">Aucune facture émise pour le moment</h4>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                Vos factures professionnelles créées ou converties depuis vos devis apparaîtront ici.
+              </p>
+            </div>
+          ) : (
+            invoices.map((inv) => (
             <div key={inv.id} className="p-4 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/50 transition-colors">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
@@ -349,7 +320,8 @@ export default function InvoicesPage() {
                 </div>
               </div>
             </div>
-          ))}
+          ))
+          )}
         </div>
       </div>
 

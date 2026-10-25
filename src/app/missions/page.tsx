@@ -41,73 +41,6 @@ interface Job {
   isDemo?: boolean;
 }
 
-const DEFAULT_REAL_MISSIONS: Job[] = [
-  {
-    id: "m-1",
-    title: "Création d'un site web vitrine responsive pour cabinet médical",
-    client: "Clinique Sainte Marie Cotonou",
-    category: "informatique",
-    budget: 250000,
-    currency: "XOF",
-    location_mode: "À distance",
-    city: "Cotonou",
-    deadline: "18/11/2026",
-    description: "Conception d'un site web de 5 pages présentant nos spécialités médicales, horaires et formulaire de prise de rendez-vous en ligne.",
-    skills: ["Next.js ou WordPress", "Mobile-first", "SEO local"],
-    beginnerFriendly: true,
-    status: "applications_open",
-    isDemo: false,
-  },
-  {
-    id: "m-2",
-    title: "Identité visuelle complète et étiquettes packaging pour gamme de jus naturels",
-    client: "BioSaveurs Bénin",
-    category: "design",
-    budget: 120000,
-    currency: "XOF",
-    location_mode: "À distance",
-    city: "Abomey-Calavi",
-    deadline: "12/11/2026",
-    description: "Création de notre logo et déclinaison des étiquettes autocollantes pour 3 bouteilles (Ananas, Gingembre, Baobab) prêtes pour l'impression.",
-    skills: ["Illustrator", "Packaging", "Impression"],
-    beginnerFriendly: true,
-    status: "applications_open",
-    isDemo: false,
-  },
-  {
-    id: "m-3",
-    title: "Installation et raccordement électrique de 10 panneaux solaires",
-    client: "Ferme Agroécologique du Borgou",
-    category: "electricite",
-    budget: 180000,
-    currency: "XOF",
-    location_mode: "Sur place",
-    city: "Parakou",
-    deadline: "20/11/2026",
-    description: "Mission de pose d'onduleur et raccordement de batteries solaires pour alimenter le système d'irrigation goutte-à-goutte.",
-    skills: ["Solaire photovoltaïque", "Électricité", "Sécurité"],
-    beginnerFriendly: false,
-    status: "applications_open",
-    isDemo: false,
-  },
-  {
-    id: "m-4",
-    title: "Saisie de factures et rapprochement bancaire trimestriel",
-    client: "Quincaillerie Moderne Porto-Novo",
-    category: "comptabilite",
-    budget: 75000,
-    currency: "XOF",
-    location_mode: "Hybride",
-    city: "Porto-Novo",
-    deadline: "10/11/2026",
-    description: "Numérisation des pièces justificatives et saisie dans notre tableau Excel de suivi de trésorerie. Idéal pour un profil rigoureux.",
-    skills: ["Excel", "Tenue de comptes", "Rigueur"],
-    beginnerFriendly: true,
-    status: "applications_open",
-    isDemo: false,
-  },
-];
-
 export default function MissionsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -115,7 +48,7 @@ export default function MissionsPage() {
   const [onlyBeginner, setOnlyBeginner] = useState(false);
   const [activeTab, setActiveTab] = useState<"missions" | "tracking">("missions");
   
-  const [jobs, setJobs] = useState<Job[]>(DEFAULT_REAL_MISSIONS);
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Modale de candidature détaillée (Section 5.2)
@@ -156,7 +89,9 @@ export default function MissionsPage() {
             status: "applications_open",
             isDemo: false,
           }));
-          setJobs([...supabaseJobs, ...DEFAULT_REAL_MISSIONS]);
+          setJobs(supabaseJobs);
+        } else {
+          setJobs([]);
         }
       } catch (err) {
         console.error("Erreur de chargement des missions", err);

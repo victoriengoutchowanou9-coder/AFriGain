@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { 
   Building2, 
@@ -58,192 +59,75 @@ interface SupplyNeed {
   postedDate: string;
 }
 
-const INITIAL_SUPPLIERS: Supplier[] = [
-  {
-    id: "sup-1",
-    name: "AgroBénin Appro & Matières Premières",
-    category: "agri",
-    city: "Parakou",
-    country: "Bénin",
-    servedZones: ["Bénin", "Togo", "Niger", "Burkina Faso"],
-    products: ["Soja non OGM certifié", "Maïs grain nettoyé", "Noix de cajou brutes", "Manioc séché"],
-    minOrderQuantity: "1 tonne (1 000 kg)",
-    leadTime: "3 à 5 jours ouvrés",
-    paymentTerms: "30% à la commande, 70% à la pesée/livraison",
-    verified: true,
-    contactEmail: "appro@agrobenin.bj",
-    contactPhone: "+229 97 22 11 00",
-    description: "Fournisseur direct de coopératives agricoles du Nord Bénin. Qualité calibrée avec certificats phytosanitaires disponibles.",
-    detailedProducts: [
-      {
-        id: "prod-soja-1",
-        name: "Soja non OGM certifié Bénin (Qualité Export UEMOA)",
-        supplierName: "AgroBénin Appro",
-        supplierCity: "Parakou",
-        supplierCountry: "Bénin",
-        supplierVerified: true,
-        category: "Matières Premières Agricoles",
-        description: "Graines de soja jaune récoltées dans les fermes du Borgou. Taux d'humidité contrôlé inférieur à 10%, calibrage homogène et absence d'impuretés. Idéal pour unités de transformation en huile, tourteau ou lait de soja.",
-        minOrderQuantity: "1 tonne (sacs de 50 kg ou 100 kg)",
-        leadTime: "3 à 5 jours ouvrés",
-        paymentTerms: "Acompte 30%, solde à la pesée contradictoire",
-        galleryUrls: [
-          "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?auto=format&fit=crop&w=800&q=80",
-          "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&w=800&q=80",
-          "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=80",
-          "https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?auto=format&fit=crop&w=800&q=80",
-          "https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=800&q=80"
-        ]
-      }
-    ]
-  },
-  {
-    id: "sup-2",
-    name: "Atelier Textile & Confection Éco-Wax",
-    category: "textile",
-    city: "Cotonou",
-    country: "Bénin",
-    servedZones: ["Bénin", "Côte d'Ivoire", "Sénégal", "France"],
-    products: ["Tissus teints artisanalement", "Uniformes de travail pour PME", "Sacs en toile de jute", "Linge professionnel"],
-    minOrderQuantity: "50 pièces",
-    leadTime: "7 à 10 jours",
-    paymentTerms: "Acompte 40%, solde à la livraison",
-    verified: true,
-    contactEmail: "contact@ecowax-atelier.bj",
-    contactPhone: "+229 95 33 44 55",
-    description: "Atelier de confection semi-industriel et artisanal pour créateurs, hôtels et uniformes d'entreprises.",
-    detailedProducts: [
-      {
-        id: "prod-wax-1",
-        name: "Tissus teints artisanalement & Wax haute résistance",
-        supplierName: "Atelier Éco-Wax",
-        supplierCity: "Cotonou",
-        supplierCountry: "Bénin",
-        supplierVerified: true,
-        category: "Textile & Confection",
-        description: "Rouleaux de tissus 100% coton teints avec pigments naturels et fixateurs durables. Motifs traditionnels et contemporains. Résistance prouvée au lavage intensif.",
-        minOrderQuantity: "50 mètres ou 20 pièces",
-        leadTime: "7 à 10 jours",
-        paymentTerms: "40% commande, 60% livraison",
-        galleryUrls: [
-          "https://images.unsplash.com/photo-1528458876885-544243324950?auto=format&fit=crop&w=800&q=80",
-          "https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?auto=format&fit=crop&w=800&q=80",
-          "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80",
-          "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=800&q=80",
-          "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=800&q=80"
-        ]
-      }
-    ]
-  },
-  {
-    id: "sup-3",
-    name: "AfriPack Solutions Emballages",
-    category: "emballages",
-    city: "Abomey-Calavi",
-    country: "Bénin",
-    servedZones: ["Bénin", "Togo", "Ghana"],
-    products: ["Cartons d'expédition sur mesure", "Bocaux en verre alimentaire", "Poches kraft avec fenêtre", "Étiquettes adhésives"],
-    minOrderQuantity: "200 unités",
-    leadTime: "48 heures pour stock standard",
-    paymentTerms: "Paiement comptant ou à 15 jours pour comptes vérifiés",
-    verified: true,
-    contactEmail: "ventes@afripack.bj",
-    contactPhone: "+229 96 11 22 33",
-    description: "Fabrication et distribution de solutions d'emballage écoresponsables pour transformateurs agroalimentaires et e-commerçants.",
-    detailedProducts: [
-      {
-        id: "prod-pack-1",
-        name: "Cartons double cannelure & Poches Kraft thermosoudables",
-        supplierName: "AfriPack Solutions",
-        supplierCity: "Abomey-Calavi",
-        supplierCountry: "Bénin",
-        supplierVerified: true,
-        category: "Emballages & Packaging",
-        description: "Emballages recyclables résistants aux chocs climatiques tropicaux. Personnalisables avec logo en sérigraphie à base d'encre végétale.",
-        minOrderQuantity: "200 unités",
-        leadTime: "48h stock / 5j personnalisation",
-        paymentTerms: "Comptant ou virement 15j",
-        galleryUrls: [
-          "https://images.unsplash.com/photo-1530587191325-3db32d826c18?auto=format&fit=crop&w=800&q=80",
-          "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=80",
-          "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&w=800&q=80",
-          "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=800&q=80",
-          "https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=800&q=80"
-        ]
-      }
-    ]
-  },
-  {
-    id: "sup-4",
-    name: "BTP Matériaux & Quincaillerie Centrale",
-    category: "materiaux",
-    city: "Porto-Novo",
-    country: "Bénin",
-    servedZones: ["Ouémé", "Plateau", "Littoral", "Atlantique"],
-    products: ["Ciment de classe supérieure", "Fers à béton normes CE/UEMOA", "Peintures professionnelles", "Câbles électriques"],
-    minOrderQuantity: "Selon produit (Détail & Gros)",
-    leadTime: "Livraison sur chantier en 24h",
-    paymentTerms: "Virement ou Mobile Money sécurisé",
-    verified: true,
-    contactEmail: "commandes@btp-centrale.bj",
-    contactPhone: "+229 94 88 77 66",
-    description: "Grossiste en fournitures pour artisans électriciens, plombiers, menuisiers et constructeurs.",
-    detailedProducts: [
-      {
-        id: "prod-btp-1",
-        name: "Fers à béton crantés FE500 & Ciment CPJ 42.5",
-        supplierName: "BTP Quincaillerie Centrale",
-        supplierCity: "Porto-Novo",
-        supplierCountry: "Bénin",
-        supplierVerified: true,
-        category: "BTP & Construction",
-        description: "Matériaux de gros œuvre certifiés conformes aux normes UEMOA. Stockage au sec, livraison rapide directement par camion plateau sur chantier.",
-        minOrderQuantity: "2 tonnes fers ou 50 sacs ciment",
-        leadTime: "24h sur chantier",
-        paymentTerms: "Mobile Money sécurisé ou chèque certifié",
-        galleryUrls: [
-          "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=80",
-          "https://images.unsplash.com/photo-1541888946425-d0fbb186c5f7?auto=format&fit=crop&w=800&q=80",
-          "https://images.unsplash.com/photo-1517581177682-a085bb7ffb15?auto=format&fit=crop&w=800&q=80",
-          "https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=800&q=80",
-          "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=800&q=80"
-        ]
-      }
-    ]
-  },
-];
-
-const INITIAL_SUPPLY_NEEDS: SupplyNeed[] = [
-  {
-    id: "need-1",
-    title: "Recherche fournisseur régulier de carton ondulé double cannelure",
-    buyer: "Cosmétique Naturelle Bénin",
-    location: "Cotonou",
-    quantityNeeded: "1 500 unités / mois",
-    frequency: "Mensuelle récurrente",
-    budgetEstimated: "450 000 FCFA / lot",
-    postedDate: "23/10/2026",
-  },
-  {
-    id: "need-2",
-    title: "Besoin de 5 tonnes d'ananas de table Pain de Sucre calibrés pour jus",
-    buyer: "Unité de Pressage Allada",
-    location: "Allada / Atlantique",
-    quantityNeeded: "5 tonnes",
-    frequency: "Bi-hebdomadaire",
-    budgetEstimated: "1 250 000 FCFA",
-    postedDate: "24/10/2026",
-  },
-];
-
 export default function FournisseursPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedZone, setSelectedZone] = useState("all");
 
   const [activeTab, setActiveTab] = useState<"suppliers" | "supply_needs">("suppliers");
-  const [suppliers, setSuppliers] = useState<Supplier[]>(INITIAL_SUPPLIERS);
-  const [supplyNeeds, setSupplyNeeds] = useState<SupplyNeed[]>(INITIAL_SUPPLY_NEEDS);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [supplyNeeds, setSupplyNeeds] = useState<SupplyNeed[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadSuppliersAndNeeds() {
+      setLoading(true);
+      const supabase = createClient();
+
+      const { data: sups } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('role', ['partner', 'client'])
+        .eq('is_active', true);
+
+      if (sups && sups.length > 0) {
+        const mappedSups = sups.map((s: any) => ({
+          id: s.id,
+          name: s.company_name || s.full_name,
+          category: "agri" as const,
+          city: s.city || 'Cotonou',
+          country: s.country || 'Bénin',
+          servedZones: [s.city || 'Bénin'],
+          products: s.skills || [],
+          minOrderQuantity: 'À convenir',
+          leadTime: '48h à 72h',
+          paymentTerms: 'Paiement direct ou Mobile Money',
+          verified: s.verification_status === 'verified',
+          contactEmail: s.email,
+          contactPhone: s.phone || 'Non renseigné',
+          description: s.headline || s.bio || 'Fournisseur B2B certifié sur AfriGain.',
+          detailedProducts: [],
+        }));
+        setSuppliers(mappedSups);
+      } else {
+        setSuppliers([]);
+      }
+
+      const { data: reqs } = await supabase
+        .from('search_requests')
+        .select('*, profiles:author_id(full_name, company_name)')
+        .eq('status', 'open');
+
+      if (reqs && reqs.length > 0) {
+        const mappedNeeds = reqs.map((r: any) => ({
+          id: r.id,
+          title: r.title,
+          buyer: r.profiles?.company_name || r.profiles?.full_name || 'Acheteur',
+          location: r.location_city || 'Cotonou',
+          quantityNeeded: r.quantity || 'Selon offre',
+          frequency: 'Ponctuelle',
+          budgetEstimated: r.budget_indicative ? `${r.budget_indicative} ${r.currency}` : 'Non spécifié',
+          postedDate: new Date(r.created_at).toLocaleDateString('fr-FR'),
+        }));
+        setSupplyNeeds(mappedNeeds);
+      } else {
+        setSupplyNeeds([]);
+      }
+      setLoading(false);
+    }
+
+    loadSuppliersAndNeeds();
+  }, []);
 
   // Modale devis fournisseur
   const [rfqSupplier, setRfqSupplier] = useState<Supplier | null>(null);
@@ -412,7 +296,15 @@ export default function FournisseursPage() {
 
           {/* Grille des fiches fournisseurs (Section 9.1) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {filteredSuppliers.map((sup) => (
+            {filteredSuppliers.length === 0 ? (
+              <div className="md:col-span-2 bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-3">
+                <Package className="w-10 h-10 text-brand-500 mx-auto" />
+                <h4 className="font-bold text-slate-900 text-base">Aucun fournisseur enregistré pour le moment</h4>
+                <p className="text-xs text-slate-500 max-w-md mx-auto">
+                  Toutes les données de démonstration ont été purgées. Les fournisseurs B2B enregistrés apparaîtront ici.
+                </p>
+              </div>
+            ) : filteredSuppliers.map((sup) => (
               <div
                 key={sup.id}
                 className="bg-white rounded-2xl border border-slate-200 p-6 hover:border-brand-500 hover:shadow-md transition-all flex flex-col justify-between space-y-4"
@@ -529,7 +421,11 @@ export default function FournisseursPage() {
             </div>
 
             <div className="divide-y divide-slate-100">
-              {supplyNeeds.map((need) => (
+              {supplyNeeds.length === 0 ? (
+                <div className="py-8 text-center space-y-2">
+                  <p className="text-xs text-slate-500">Aucun besoin d'approvisionnement en attente actuellement.</p>
+                </div>
+              ) : supplyNeeds.map((need) => (
                 <div key={need.id} className="py-4 first:pt-0 last:pb-0 space-y-2">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <h3 className="text-sm font-bold text-slate-900">{need.title}</h3>

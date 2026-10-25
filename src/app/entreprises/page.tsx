@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { 
   Building2, 
@@ -50,121 +51,52 @@ interface CompanyProfile {
   galleryUrls?: string[]; // Section 7 : 5 photos maximum de présentation
 }
 
-const INITIAL_COMPANIES: CompanyProfile[] = [
-  {
-    id: "comp-1",
-    name: "Sahel Fintech Solutions",
-    tagline: "Plateforme de paiement mobile et d'inclusion financière pour l'Afrique de l'Ouest",
-    sector: "Technologies & Fintech",
-    city: "Abomey-Calavi",
-    country: "Bénin",
-    teamSize: "15-30 collaborateurs",
-    verified: true,
-    services: ["Intégration d'APIs de paiement Mobile Money", "Développement SaaS sur mesure", "Audit de cybersécurité"],
-    products: ["Passerelle AfriPay", "Terminal commerçant QR Code"],
-    references: ["Plus de 250 commerçants connectés", "Partenaire agréé des opérateurs télécoms"],
-    zones: ["Bénin", "Togo", "Côte d'Ivoire", "Sénégal"],
-    email: "contact@sahelfintech.bj",
-    phone: "+229 97 10 20 30",
-    website: "https://sahelfintech.bj",
-    openJobsCount: 1,
-    openMissionsCount: 2,
-    newsTitle: "Ouverture de notre nouvelle API de paiement QR Code pour TPE",
-    newsContent: "Intégrez le paiement instantané sur votre site ou application en moins de 24h avec un taux réduit.",
-    galleryUrls: [
-      "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=800&q=80"
-    ],
-  },
-  {
-    id: "comp-2",
-    name: "Cabinet Conseil Fiduciaire Bénin",
-    tagline: "Expertise comptable, déclarations fiscales et structuration de PME",
-    sector: "Comptabilité & Conseil Juridique",
-    city: "Cotonou",
-    country: "Bénin",
-    teamSize: "10-20 experts",
-    verified: true,
-    services: ["Tenue comptable SYSCOHADA", "Assistance fiscale et sociale", "Montage de dossiers de crédit bancaire"],
-    products: ["Pack Clôture Annuelle TPE", "Audit de conformité CNSS/DGI"],
-    references: ["Membre de l'Ordre des Experts-Comptables", "Accompagnement de plus de 80 PME"],
-    zones: ["Cotonou", "Porto-Novo", "Parakou", "International"],
-    email: "direction@fiduciaire-benin.bj",
-    phone: "+229 95 44 22 11",
-    openJobsCount: 1,
-    openMissionsCount: 1,
-    newsTitle: "Nouveau guide fiscal 2026 pour micro-entrepreneurs",
-    newsContent: "Téléchargez les bonnes pratiques pour optimiser vos déclarations sans pénalités.",
-    galleryUrls: [
-      "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=800&q=80"
-    ],
-  },
-  {
-    id: "comp-3",
-    name: "Énergie Verte Afrique",
-    tagline: "Ingénierie solaire, pompage photovoltaïque et autonomie énergétique",
-    sector: "Énergie & Travaux",
-    city: "Parakou",
-    country: "Bénin",
-    teamSize: "20-50 techniciens",
-    verified: true,
-    services: ["Dimensionnement solaire résidentiel & agricole", "Installation de pompes solaires immergées", "Maintenance industrielle"],
-    products: ["Kits solaires autonomes 3kVA à 20kVA", "Onduleurs hybrides intelligents"],
-    references: ["120 fermes agricoles équipées dans le Borgou et l'Alibori", "Garantie matériel 5 ans"],
-    zones: ["Bénin (National)", "Niger", "Burkina Faso"],
-    email: "info@energieverte-afrique.com",
-    phone: "+229 96 55 66 77",
-    openJobsCount: 1,
-    openMissionsCount: 0,
-    newsTitle: "Campagne d'électrification des fermes maraîchères 2026",
-    newsContent: "Facilités de paiement en 3 fois sans frais pour les exploitants agricoles enregistrés sur AfriGain.",
-    galleryUrls: [
-      "https://images.unsplash.com/photo-1509391365360-2e959784a276?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1497440001374-f26997328c1b?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1548337138-e87d889cc369?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1508873696983-2df5293cb32b?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1466611653911-95081537e5b7?auto=format&fit=crop&w=800&q=80"
-    ],
-  },
-  {
-    id: "comp-4",
-    name: "Studio Digital Créatif",
-    tagline: "Agence de branding, communication de marque et production de contenu digital",
-    sector: "Marketing, Design & Médias",
-    city: "Abidjan",
-    country: "Côte d'Ivoire",
-    teamSize: "8 créatifs",
-    verified: true,
-    services: ["Identité visuelle & Logotypes", "Stratégie de contenu réseaux sociaux", "Shooting photos produits"],
-    products: ["Pack Identité Visuelle Express", "Abonnement Community Management Mensuel"],
-    references: ["Plus de 40 marques accompagnées en Afrique de l'Ouest", "Trophée Créativité Digitale 2025"],
-    zones: ["Côte d'Ivoire", "Bénin", "Sénégal", "France"],
-    email: "bonjour@studiocreatif.ci",
-    phone: "+225 07 08 09 10 11",
-    openJobsCount: 1,
-    openMissionsCount: 1,
-    galleryUrls: [
-      "https://images.unsplash.com/photo-1542744094-3a31f272c490?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1600132806370-bf17e65e942f?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1534972195531-a756b1126f24?auto=format&fit=crop&w=800&q=80"
-    ],
-  },
-];
-
 export default function EntreprisesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSector, setSelectedSector] = useState("all");
   const [selectedCity, setSelectedCity] = useState("all");
-  const [companies, setCompanies] = useState<CompanyProfile[]>(INITIAL_COMPANIES);
+  const [companies, setCompanies] = useState<CompanyProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadCompanies() {
+      setLoading(true);
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .in("role", ["client", "partner"])
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+
+      if (data && data.length > 0) {
+        const mapped = data.map((p) => ({
+          id: p.id,
+          name: p.company_name || p.full_name,
+          tagline: p.headline || p.bio || "Entreprise enregistrée sur AfriGain",
+          sector: p.business_sector || "Entreprise & Commerce",
+          city: p.city || "Cotonou",
+          country: p.country || "Bénin",
+          teamSize: "Entreprise certifiée",
+          verified: p.verification_status === "verified",
+          services: p.skills || [],
+          products: [],
+          references: [],
+          zones: [p.city || "Bénin"],
+          email: p.email,
+          phone: p.phone || "Non renseigné",
+          openJobsCount: 0,
+          openMissionsCount: 0,
+          galleryUrls: p.company_gallery_urls || [],
+        }));
+        setCompanies(mapped);
+      } else {
+        setCompanies([]);
+      }
+      setLoading(false);
+    }
+    loadCompanies();
+  }, []);
 
   // Modale contact / demande de devis
   const [contactCompany, setContactCompany] = useState<CompanyProfile | null>(null);
@@ -267,7 +199,15 @@ export default function EntreprisesPage() {
 
       {/* Grille des Entreprises */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {filteredCompanies.map((c) => (
+        {filteredCompanies.length === 0 ? (
+          <div className="md:col-span-2 bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-3">
+            <Building2 className="w-10 h-10 text-brand-500 mx-auto" />
+            <h4 className="font-bold text-slate-900 text-base">Aucune entreprise dans cette sélection</h4>
+            <p className="text-xs text-slate-500 max-w-md mx-auto">
+              Toutes les entreprises affichées sur AfriGain proviennent de profils professionnels réels enregistrés sur la plateforme.
+            </p>
+          </div>
+        ) : filteredCompanies.map((c) => (
           <div
             key={c.id}
             className="bg-white rounded-2xl border border-slate-200 p-6 hover:border-brand-500 hover:shadow-md transition-all flex flex-col justify-between space-y-4"
