@@ -86,6 +86,8 @@ export default function VerificationPage() {
   const [identityStatus, setIdentityStatus] = useState<string>("documents_pending");
   const [professionalStatus, setProfessionalStatus] = useState<string>("not_applicable");
   const [rejectionReason, setRejectionReason] = useState<string | null>(null);
+  const [isEditingIdentity, setIsEditingIdentity] = useState(false);
+  const [isEditingBusiness, setIsEditingBusiness] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -259,6 +261,7 @@ export default function VerificationPage() {
 
       setIdentityStatus("pending");
       setRejectionReason(null);
+      setIsEditingIdentity(false);
       setFeedback({
         type: "success",
         text: "Votre dossier d'identité a été transmis avec succès. Un administrateur procédera à sa vérification sous 24 à 48 heures.",
@@ -318,6 +321,7 @@ export default function VerificationPage() {
       });
 
       setProfessionalStatus("pending");
+      setIsEditingBusiness(false);
       setFeedback({
         type: "success",
         text: "Les informations de votre entreprise ont été enregistrées et transmises pour vérification manuelle par l'équipe de gouvernance.",
@@ -476,12 +480,113 @@ export default function VerificationPage() {
 
       {/* 1. VÉRIFICATION PERSONNELLE (Section 5 du prompt) */}
       {verificationTab === "personne" && (
+        (identityStatus === "pending" || identityStatus === "verified") && !isEditingIdentity ? (
+          <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6 animate-fadeIn">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-brand-600 bg-brand-50 px-2.5 py-0.5 rounded-full">
+                  Dossier d&apos;identité soumis
+                </span>
+                <h2 className="text-xl font-extrabold text-slate-900 mt-1">
+                  {firstName} {lastName}
+                </h2>
+                <p className="text-xs text-slate-500">
+                  {identityStatus === "verified"
+                    ? "Votre identité a été vérifiée et validée avec succès par l'administration."
+                    : "Votre dossier est actuellement en cours d'examen par notre équipe de conformité."}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-2 ${currentIdentityStatus.color}`}>
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>{currentIdentityStatus.label}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsEditingIdentity(true)}
+                  className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition-all shadow-sm"
+                >
+                  Modifier ou compléter
+                </button>
+              </div>
+            </div>
+
+            {/* Récapitulatif des données déclarées */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs">
+              <div>
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Nationalité</span>
+                <strong className="text-slate-800">{nationality}</strong>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Pays de résidence</span>
+                <strong className="text-slate-800">{residenceCountry}</strong>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Type de document</span>
+                <strong className="text-slate-800 uppercase">{documentType}</strong>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Numéro de pièce</span>
+                <strong className="text-slate-800 font-mono">{documentNumber || "Transmis"}</strong>
+              </div>
+            </div>
+
+            {/* Aperçu des pièces transmises */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                Documents justificatifs enregistrés dans votre dossier sécurisé
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-center space-y-2">
+                  <span className="text-[11px] font-bold text-slate-700 block">Photo d&apos;identité (Portrait)</span>
+                  {portraitPreview ? (
+                    <img src={portraitPreview} alt="Portrait" className="w-20 h-20 rounded-full mx-auto object-cover border-2 border-brand-500 shadow-sm" />
+                  ) : (
+                    <div className="w-20 h-20 rounded-full mx-auto bg-slate-200 flex items-center justify-center text-xs text-slate-400">Non fournie</div>
+                  )}
+                  <span className="text-[10px] text-emerald-600 font-semibold block">✓ Enregistré</span>
+                </div>
+
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-center space-y-2">
+                  <span className="text-[11px] font-bold text-slate-700 block">Recto de la pièce</span>
+                  {frontPreview ? (
+                    <img src={frontPreview} alt="Recto" className="w-full h-20 rounded-lg object-cover border border-slate-300 shadow-sm" />
+                  ) : (
+                    <div className="w-full h-20 rounded-lg bg-slate-200 flex items-center justify-center text-xs text-slate-400">Non fourni</div>
+                  )}
+                  <span className="text-[10px] text-emerald-600 font-semibold block">✓ Enregistré</span>
+                </div>
+
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-center space-y-2">
+                  <span className="text-[11px] font-bold text-slate-700 block">Verso / Complément</span>
+                  {backPreview || studentPreview ? (
+                    <img src={backPreview || studentPreview!} alt="Verso" className="w-full h-20 rounded-lg object-cover border border-slate-300 shadow-sm" />
+                  ) : (
+                    <div className="w-full h-20 rounded-lg bg-slate-200 flex items-center justify-center text-xs text-slate-400">Non fourni</div>
+                  )}
+                  <span className="text-[10px] text-emerald-600 font-semibold block">✓ Enregistré</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
         <form onSubmit={handleSubmitIdentity} className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
-          <div className="border-b border-slate-100 pb-4">
-            <h2 className="text-lg font-bold text-slate-900">Informations & Pièce d'Identité Officielle</h2>
-            <p className="text-xs text-slate-500">
-              Ces données servent uniquement à la validation de votre identité et ne seront jamais publiées sur votre vitrine publique.
-            </p>
+          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Informations & Pièce d&apos;Identité Officielle</h2>
+              <p className="text-xs text-slate-500">
+                Ces données servent uniquement à la validation de votre identité et ne seront jamais publiées sur votre vitrine publique.
+              </p>
+            </div>
+            {isEditingIdentity && (
+              <button
+                type="button"
+                onClick={() => setIsEditingIdentity(false)}
+                className="px-3 py-1.5 border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold"
+              >
+                Annuler la modification
+              </button>
+            )}
           </div>
 
           {/* Nom et Prénom */}
@@ -751,16 +856,89 @@ export default function VerificationPage() {
             </button>
           </div>
         </form>
+        )
       )}
 
       {/* 2. VÉRIFICATION ENTREPRISE (Section 6 du prompt) */}
       {verificationTab === "entreprise" && (
+        (professionalStatus === "pending" || professionalStatus === "verified") && !isEditingBusiness ? (
+          <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6 animate-fadeIn">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-brand-600 bg-brand-50 px-2.5 py-0.5 rounded-full">
+                  Dossier d&apos;entreprise soumis
+                </span>
+                <h2 className="text-xl font-extrabold text-slate-900 mt-1">
+                  {companyName || "Entreprise"}
+                </h2>
+                <p className="text-xs text-slate-500">
+                  {professionalStatus === "verified"
+                    ? "Votre statut professionnel et entreprise a été validé avec succès."
+                    : "Votre dossier d'entreprise est en cours de contrôle administratif."}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-2 ${currentProStatus.color}`}>
+                  <Building2 className="w-3.5 h-3.5" />
+                  <span>{currentProStatus.label}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsEditingBusiness(true)}
+                  className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition-all shadow-sm"
+                >
+                  Modifier les informations
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs">
+              <div>
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Raison Sociale</span>
+                <strong className="text-slate-800">{companyName}</strong>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Pays</span>
+                <strong className="text-slate-800">{businessCountry}</strong>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Numéro IFU</span>
+                <strong className="text-slate-800 font-mono">{ifuNumber || "Non applicable"}</strong>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Numéro RCCM</span>
+                <strong className="text-slate-800 font-mono">{rccmNumber || "Non applicable"}</strong>
+              </div>
+            </div>
+
+            {businessFilePreview && (
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center gap-3">
+                <FileText className="w-6 h-6 text-brand-600 shrink-0" />
+                <div>
+                  <span className="text-xs font-bold text-slate-800 block">Justificatif d&apos;immatriculation joint</span>
+                  <span className="text-[10px] text-emerald-600 font-semibold">✓ Document enregistré dans votre dossier</span>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
         <form onSubmit={handleSubmitBusiness} className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
-          <div className="border-b border-slate-100 pb-4">
-            <h2 className="text-lg font-bold text-slate-900">Enregistrement Légal de l'Entreprise</h2>
-            <p className="text-xs text-slate-500">
-              Vérification des numéros d'immatriculation et documents officiels. Les entreprises étrangères fournissent leurs équivalents locaux.
-            </p>
+          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Enregistrement Légal de l'Entreprise</h2>
+              <p className="text-xs text-slate-500">
+                Vérification des numéros d'immatriculation et documents officiels. Les entreprises étrangères fournissent leurs équivalents locaux.
+              </p>
+            </div>
+            {isEditingBusiness && (
+              <button
+                type="button"
+                onClick={() => setIsEditingBusiness(false)}
+                className="px-3 py-1.5 border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold"
+              >
+                Annuler la modification
+              </button>
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -906,6 +1084,7 @@ export default function VerificationPage() {
             </button>
           </div>
         </form>
+        )
       )}
     </div>
   );

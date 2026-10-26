@@ -29,9 +29,11 @@ interface Job {
   title: string;
   client: string;
   category: string;
+  category_name?: string;
   budget: number;
   currency: string;
   location_mode: string;
+  country?: string;
   city: string;
   deadline: string;
   description: string;
@@ -68,7 +70,7 @@ export default function MissionsPage() {
         const supabase = createClient();
         const { data: jobData } = await supabase
           .from("job_posts")
-          .select("*, profiles:client_id(full_name, company_name)")
+          .select("*, profiles:client_id(full_name, company_name), categories:category_id(id, name, slug)")
           .eq("status", "published")
           .order("created_at", { ascending: false });
 
@@ -77,11 +79,13 @@ export default function MissionsPage() {
             id: j.id,
             title: j.title,
             client: j.profiles?.company_name || j.profiles?.full_name || "Client Entreprise",
-            category: j.category_id || "general",
+            category: j.categories?.slug || j.category_id || "general",
+            category_name: j.categories?.name || "",
             budget: Number(j.budget_amount) || 50000,
             currency: j.budget_currency || "XOF",
             location_mode: j.location_mode === "remote" ? "À distance" : j.location_mode === "hybrid" ? "Hybride" : "Sur place",
-            city: j.location_city || "Cotonou",
+            country: j.location_country || "International",
+            city: j.location_city || (j.location_mode === "remote" ? "À distance / International" : "Cotonou"),
             deadline: j.deadline ? new Date(j.deadline).toLocaleDateString("fr-FR") : "Flexible",
             description: j.description,
             skills: j.skills_required || [],
@@ -159,12 +163,22 @@ export default function MissionsPage() {
       job.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.skills.some((s) => s.toLowerCase().includes(searchTerm.toLowerCase()));
 
+    const matchedMetier = AFRIGAIN_METIERS.find((m) => m.id === selectedCategory);
     const matchesCategory =
-      selectedCategory === "all" || job.category === selectedCategory;
+      selectedCategory === "all" ||
+      job.category === selectedCategory ||
+      (job.category_name && matchedMetier && job.category_name.toLowerCase().includes(matchedMetier.name.toLowerCase())) ||
+      job.skills.some((s) => {
+        if (!matchedMetier) return false;
+        return (
+          s.toLowerCase().includes(matchedMetier.name.toLowerCase()) ||
+          s.toLowerCase().includes(matchedMetier.id.toLowerCase())
+        );
+      });
 
     const matchesLocation =
       selectedLocation === "all" ||
-      (selectedLocation === "remote" && job.location_mode === "À distance") ||
+      (selectedLocation === "remote" && (job.location_mode === "À distance" || job.city.toLowerCase().includes("distance"))) ||
       (selectedLocation === "onsite" && job.location_mode !== "À distance");
 
     const matchesBeginner = !onlyBeginner || job.beginnerFriendly;
@@ -276,6 +290,11 @@ export default function MissionsPage() {
                   <h2 className="text-base font-bold text-slate-900 hover:text-brand-600 cursor-pointer">
                     {job.title}
                   </h2>
+                  {job.category_name && (
+                    <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-800 border border-slate-200">
+                      {job.category_name}
+                    </span>
+                  )}
                   {job.beginnerFriendly && (
                     <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
                       <Sparkles className="w-3 h-3 text-emerald-600" />
@@ -294,7 +313,9 @@ export default function MissionsPage() {
                   </span>
                   <span className="flex items-center gap-1">
                     <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                    {job.city} ({job.location_mode})
+                    {job.location_mode === "À distance"
+                      ? "À distance / International"
+                      : `${job.city}${job.country && job.country !== "International" ? `, ${job.country}` : ""} (${job.location_mode})`}
                   </span>
                   <span className="font-bold text-brand-700">
                     💰 Budget indicatif : {formatCurrency(job.budget, job.currency)}

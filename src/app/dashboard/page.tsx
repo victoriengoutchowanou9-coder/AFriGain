@@ -39,7 +39,41 @@ export default function DashboardPage() {
   const [userId, setUserId] = useState<string>("");
   const [userProfile, setUserProfile] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [profileCompletion, setProfileCompletion] = useState(75);
+  const [profileCompletion, setProfileCompletion] = useState<number>(0);
+  const [missingFields, setMissingFields] = useState<string[]>([]);
+
+  const calculateProfileCompletion = (p: any): { percent: number; missing: string[] } => {
+    if (!p) return { percent: 0, missing: ["Nom complet", "Compétences", "Localisation"] };
+    const missing: string[] = [];
+    let score = 0;
+
+    const isCompany = p.role === "client" || p.category === "entreprise" || p.category === "fournisseur";
+
+    if (isCompany) {
+      if (p.company_name?.trim()) score += 20; else missing.push("Nom d'entreprise / Raison sociale");
+      if (p.headline?.trim() || p.bio?.trim()) score += 20; else missing.push("Description ou présentation d'activité");
+      if (p.country?.trim()) score += 15; else missing.push("Pays");
+      if (p.city?.trim()) score += 15; else missing.push("Ville");
+      if (p.phone?.trim()) score += 15; else missing.push("Numéro de téléphone");
+      if (p.ifu_number?.trim() || p.rccm_number?.trim() || p.avatar_url) score += 15; else missing.push("Identifiant fiscal ou logo");
+    } else {
+      if (p.full_name?.trim()) score += 20; else missing.push("Nom et prénom");
+      if (p.headline?.trim()) score += 15; else missing.push("Titre professionnel");
+      if (p.country?.trim()) score += 15; else missing.push("Pays");
+      if (p.city?.trim()) score += 15; else missing.push("Ville");
+      if (Array.isArray(p.skills) && p.skills.length >= 3) {
+        score += 20;
+      } else if (Array.isArray(p.skills) && p.skills.length > 0) {
+        score += 10;
+        missing.push("Au moins 3 compétences déclarées");
+      } else {
+        missing.push("Compétences professionnelles");
+      }
+      if (p.bio?.trim()) score += 15; else missing.push("Présentation / Bio détaillée");
+    }
+
+    return { percent: Math.min(100, Math.max(0, score)), missing };
+  };
 
   useEffect(() => {
     async function loadUser() {
@@ -58,6 +92,10 @@ export default function DashboardPage() {
 
           if (p) {
             setUserProfile(p);
+            const { percent, missing } = calculateProfileCompletion(p);
+            setProfileCompletion(percent);
+            setMissingFields(missing);
+
             if (p.role === "admin") {
               setIsAdmin(true);
             }
@@ -150,18 +188,26 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-400 uppercase">Complétude du Profil</span>
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Complétude du Profil</span>
                 <span className="text-sm font-black text-brand-600">{profileCompletion}%</span>
               </div>
               <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
                 <div
-                  className="bg-brand-600 h-2.5 rounded-full transition-all duration-500"
+                  className={`h-2.5 rounded-full transition-all duration-500 ${
+                    profileCompletion >= 80 ? "bg-emerald-500" : profileCompletion >= 50 ? "bg-brand-600" : "bg-amber-500"
+                  }`}
                   style={{ width: `${profileCompletion}%` }}
                 />
               </div>
-              <p className="text-xs text-slate-500">
-                Ajoutez un lien de portfolio ou une réalisation concrète pour atteindre 100% et maximiser vos chances de sélection.
-              </p>
+              {missingFields.length > 0 ? (
+                <p className="text-xs text-slate-500">
+                  <span className="font-semibold text-slate-700">À compléter ({missingFields.length}) :</span> {missingFields.slice(0, 2).join(", ")}{missingFields.length > 2 ? "..." : ""}
+                </p>
+              ) : (
+                <p className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Profil 100% complété !
+                </p>
+              )}
               <Link
                 href="/dashboard/profile"
                 className="text-xs font-bold text-brand-600 hover:text-brand-700 inline-flex items-center gap-1"
