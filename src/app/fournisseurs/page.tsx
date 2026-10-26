@@ -81,21 +81,29 @@ export default function FournisseursPage() {
         .eq('is_active', true);
 
       if (sups && sups.length > 0) {
-        const mappedSups = sups.map((s: any) => ({
+        const cleanSups = sups.filter((s: any) => {
+          const n = (s.company_name || s.full_name || "").toLowerCase();
+          const em = (s.email || "").toLowerCase();
+          const isTest = n.includes("test") || n.includes("testeur") || n.includes("demo") || em.includes("example.com");
+          const hasBusiness = Boolean(s.company_name || s.business_sector || (s.headline && s.headline.trim().length > 3));
+          return !isTest && hasBusiness;
+        });
+
+        const mappedSups = cleanSups.map((s: any) => ({
           id: s.id,
-          name: s.company_name || s.full_name,
-          category: "agri" as const,
-          city: s.city || 'Cotonou',
-          country: s.country || 'Bénin',
-          servedZones: [s.city || 'Bénin'],
-          products: s.skills || [],
+          name: s.company_name || s.full_name || "Fournisseur Partenaire",
+          category: (s.business_sector?.toLowerCase().includes("textile") ? "textile" : s.business_sector?.toLowerCase().includes("tech") ? "technologie" : "agri") as any,
+          city: s.city || "",
+          country: s.country || "Afrique & International",
+          servedZones: [s.city || s.country || "International"],
+          products: Array.isArray(s.skills) ? s.skills : [],
           minOrderQuantity: 'À convenir',
-          leadTime: '48h à 72h',
-          paymentTerms: 'Paiement direct ou Mobile Money',
+          leadTime: 'Selon commande',
+          paymentTerms: 'Paiement direct sécurisé ou virement',
           verified: s.verification_status === 'verified',
           contactEmail: s.email,
           contactPhone: s.phone || 'Non renseigné',
-          description: s.headline || s.bio || 'Fournisseur B2B certifié sur AfriGain.',
+          description: s.headline || s.bio || 'Fournisseur B2B enregistré sur AfriGain.',
           detailedProducts: [],
         }));
         setSuppliers(mappedSups);
@@ -163,30 +171,73 @@ export default function FournisseursPage() {
     return matchesSearch && matchesCategory && matchesZone;
   });
 
-  const handleSendRFQ = (e: React.FormEvent) => {
+  const handleSendRFQ = async (e: React.FormEvent) => {
     e.preventDefault();
-    setRfqSuccess(true);
-    setTimeout(() => {
-      setRfqSuccess(false);
-      setRfqSupplier(null);
-      setRfqQuantity("");
-      setRfqMessage("");
-    }, 1800);
+    if (!rfqSupplier) return;
+    try {
+      await fetch("/api/quotes/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          talentId: rfqSupplier.id,
+          talentName: rfqSupplier.name,
+          clientName: rfqSenderName.trim() || "Acheteur Professionnel",
+          clientPhone: rfqSenderContact.trim() || "+229 00 00 00 00",
+          needDescription: `[Demande de cotation B2B Fournisseur]\nQuantité & Référence : ${rfqQuantity}\nMessage : ${rfqMessage}`,
+          currency: "XOF",
+        }),
+      });
+      setRfqSuccess(true);
+      setTimeout(() => {
+        setRfqSuccess(false);
+        setRfqSupplier(null);
+        setRfqQuantity("");
+        setRfqMessage("");
+        setRfqSenderName("");
+        setRfqSenderContact("");
+      }, 1800);
+    } catch (err) {
+      console.error("Erreur RFQ:", err);
+    }
   };
 
-  const handleCreateNeed = (e: React.FormEvent) => {
+  const handleCreateNeed = async (e: React.FormEvent) => {
     e.preventDefault();
-    const created: SupplyNeed = {
-      id: `need-${Date.now()}`,
-      title: needTitle,
-      buyer: needBuyer,
-      location: needLocation,
-      quantityNeeded: needQuantity,
-      frequency: "Commande ponctuelle / récurrente",
-      budgetEstimated: needBudget || "À convenir selon offre",
-      postedDate: new Date().toLocaleDateString("fr-FR"),
-    };
-    setSupplyNeeds([created, ...supplyNeeds]);
+    try {
+      const supabase = createClient();
+      const { data: u } = await supabase.auth.getUser();
+      if (!u?.user) {
+        window.location.href = "/auth/login?redirect=/fournisseurs";
+        return;
+      }
+      const { data: inserted, error } = await supabase.from("search_requests").insert({
+        author_id: u.user.id,
+        title: needTitle.trim(),
+        category: "Fournitures & B2B",
+        quantity: needQuantity.trim() || null,
+        location_city: needLocation.trim() || "Cotonou",
+        budget_indicative: Number(needBudget) || null,
+        currency: "XOF",
+        status: "open",
+        description: `Besoin d'approvisionnement B2B publié par ${needBuyer.trim() || u.user.user_metadata?.full_name || 'Entreprise'}`
+      }).select().single();
+
+      if (!error && inserted) {
+        const created: SupplyNeed = {
+          id: inserted.id,
+          title: inserted.title,
+          buyer: needBuyer.trim() || "Entreprise",
+          location: needLocation.trim(),
+          quantityNeeded: needQuantity.trim(),
+          frequency: "Commande B2B",
+          budgetEstimated: needBudget ? `${needBudget} XOF` : "À convenir selon offre",
+          postedDate: new Date().toLocaleDateString("fr-FR"),
+        };
+        setSupplyNeeds([created, ...supplyNeeds]);
+      }
+    } catch (err) {
+      console.error("Erreur enregistrement besoin:", err);
+    }
     setIsNeedModalOpen(false);
     setNeedTitle("");
     setNeedBuyer("");

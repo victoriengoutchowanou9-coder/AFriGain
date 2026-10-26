@@ -57,7 +57,11 @@ export function NearMeHub() {
 
     const { data } = await query;
     if (data) {
-      setProfiles(data as any);
+      const clean = data.filter((p: any) => {
+        const n = (p.full_name || "").toLowerCase();
+        return !n.includes("test") && !n.includes("testeur") && !n.includes("demo");
+      });
+      setProfiles(clean as any);
     }
     setIsLoading(false);
   };

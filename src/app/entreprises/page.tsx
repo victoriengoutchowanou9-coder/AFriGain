@@ -70,19 +70,27 @@ export default function EntreprisesPage() {
         .order("created_at", { ascending: false });
 
       if (data && data.length > 0) {
-        const mapped = data.map((p) => ({
+        const cleanData = data.filter((p) => {
+          const n = (p.company_name || p.full_name || "").toLowerCase();
+          const em = (p.email || "").toLowerCase();
+          const isTest = n.includes("test") || n.includes("testeur") || n.includes("demo") || em.includes("example.com") || em.includes("testuser");
+          const hasBusiness = Boolean(p.company_name || p.business_sector || (p.headline && p.headline.trim().length > 3));
+          return !isTest && hasBusiness;
+        });
+
+        const mapped = cleanData.map((p) => ({
           id: p.id,
-          name: p.company_name || p.full_name,
+          name: p.company_name || p.full_name || "Entreprise Partenaire",
           tagline: p.headline || p.bio || "Entreprise enregistrée sur AfriGain",
-          sector: p.business_sector || "Entreprise & Commerce",
-          city: p.city || "Cotonou",
-          country: p.country || "Bénin",
-          teamSize: "Entreprise certifiée",
+          sector: p.business_sector || "Entreprise & Services Professionnels",
+          city: p.city || "",
+          country: p.country || "Afrique & International",
+          teamSize: "Entreprise vérifiée",
           verified: p.verification_status === "verified",
-          services: p.skills || [],
+          services: Array.isArray(p.skills) ? p.skills : [],
           products: [],
           references: [],
-          zones: [p.city || "Bénin"],
+          zones: [p.city || p.country || "International"],
           email: p.email,
           phone: p.phone || "Non renseigné",
           openJobsCount: 0,
@@ -127,16 +135,35 @@ export default function EntreprisesPage() {
     return matchesSearch && matchesSector && matchesCity;
   });
 
-  const handleSendContact = (e: React.FormEvent) => {
+  const handleSendContact = async (e: React.FormEvent) => {
     e.preventDefault();
-    setContactSuccess(true);
-    setTimeout(() => {
-      setContactSuccess(false);
-      setContactCompany(null);
-      setContactName("");
-      setContactEmail("");
-      setContactMessage("");
-    }, 1800);
+    if (!contactCompany) return;
+    try {
+      await fetch("/api/quotes/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          talentId: contactCompany.id,
+          talentName: contactCompany.name,
+          clientName: contactName.trim() || "Partenaire B2B",
+          clientEmail: contactEmail.trim(),
+          clientPhone: contactPhone.trim() || "+229 00 00 00 00",
+          needDescription: `[Contact Entreprise & Proposition de Partenariat]\n${contactMessage}`,
+          currency: "XOF",
+        }),
+      });
+      setContactSuccess(true);
+      setTimeout(() => {
+        setContactSuccess(false);
+        setContactCompany(null);
+        setContactName("");
+        setContactEmail("");
+        setContactPhone("");
+        setContactMessage("");
+      }, 1800);
+    } catch (err) {
+      console.error("Erreur contact:", err);
+    }
   };
 
   return (

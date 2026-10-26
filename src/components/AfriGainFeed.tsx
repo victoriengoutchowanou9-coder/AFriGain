@@ -218,7 +218,11 @@ export function AfriGainFeed() {
 
     const { data, error } = await query;
     if (data) {
-      setPosts(data as any);
+      const cleanPosts = data.filter((p: any) => {
+        const authorName = (p.profiles?.full_name || "").toLowerCase();
+        return !authorName.includes("testeur") && !authorName.includes("test nouvel");
+      });
+      setPosts(cleanPosts as any);
 
       // Load user likes
       const { data: authData } = await supabase.auth.getUser();
