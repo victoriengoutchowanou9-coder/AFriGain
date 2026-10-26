@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { 
   Bot, 
@@ -22,7 +22,9 @@ import {
   Printer,
   ChevronRight,
   TrendingUp,
-  Briefcase
+  Briefcase,
+  RotateCcw,
+  RefreshCw
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
@@ -31,6 +33,7 @@ interface ChatMessage {
   sender: "coach" | "user";
   text: string;
   timestamp: string;
+  source?: "external_llm" | "smart_engine";
 }
 
 export default function BusinessCoachIAPage() {
@@ -47,16 +50,39 @@ export default function BusinessCoachIAPage() {
   >("coach");
 
   // 1. Module Coach Conversationnel
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "1",
-      sender: "coach",
-      text: "Bonjour ! Je suis votre Business Coach AFriGain. Je vous accompagne dans la création d'activité, le calcul de vos prix, la conquête de clients et la structuration de vos propositions commerciales. Comment puis-je vous aider aujourd'hui ?",
-      timestamp: "Maintenant",
-    },
-  ]);
+  const initialWelcomeMessage: ChatMessage = {
+    id: "welcome-1",
+    sender: "coach",
+    text: "Bonjour et bienvenue sur AfriGain ! Je suis votre Business Coach IA. Je vous accompagne dans le développement de vos compétences, la recherche d'opportunités de revenus, la fixation de vos prix ou la création de votre activité. Comment puis-je vous aider aujourd'hui ?",
+    timestamp: "Maintenant",
+  };
+
+  const [messages, setMessages] = useState<ChatMessage[]>([initialWelcomeMessage]);
   const [inputVal, setInputVal] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll chat to bottom
+  const scrollToBottom = () => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isTyping]);
+
+  // Réinitialiser la conversation
+  const handleResetConversation = () => {
+    setMessages([
+      {
+        ...initialWelcomeMessage,
+        id: `welcome-${Date.now()}`,
+        timestamp: new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
+      },
+    ]);
+    setErrorMessage(null);
+  };
 
   // 2. Calculateur de Prix & Marge
   const [hourlyRate, setHourlyRate] = useState<number>(5000); // FCFA
@@ -163,31 +189,45 @@ Bien cordialement,
     setLangOutput("Hello, we have duly received your quote request. Our team is available to kick off the project this Monday, with a guaranteed delivery within 10 business days.");
   };
 
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputVal.trim()) return;
+  // Envoi réel des messages au backend API Coach IA
+  const sendMessageToServer = async (textToSend: string) => {
+    if (!textToSend.trim() || isTyping) return;
 
     const userMsg: ChatMessage = {
       id: Date.now().toString(),
       sender: "user",
-      text: inputVal,
+      text: textToSend.trim(),
       timestamp: new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
     };
 
-    setMessages((prev) => [...prev, userMsg]);
+    const updatedMessages = [...messages, userMsg];
+    setMessages(updatedMessages);
     setInputVal("");
+    setErrorMessage(null);
     setIsTyping(true);
 
-    setTimeout(() => {
-      let reply = "Pour mener à bien cette action, décomposez votre démarche : 1° Clarifiez le besoin spécifique du client ; 2° Proposez un devis avec acompte de 30% ; 3° Fixez des étapes de validation régulières pour éviter tout malentendu.";
-      
-      const lower = userMsg.text.toLowerCase();
-      if (lower.includes("prix") || lower.includes("tarif") || lower.includes("combien")) {
-        reply = "Pour fixer vos prix au Bénin et en zone UEMOA, ne sous-évaluez pas vos coûts réels (temps, connexion, déplacements). Utilisez l'onglet 'Calculateur de marge' à gauche pour définir un prix unitaire ou forfaitaire garantissant une marge bénéficiaire de 20% minimum.";
-      } else if (lower.includes("client") || lower.includes("prospect")) {
-        reply = "Pour décrocher un client, ne parlez pas d'abord de vous, mais de son problème. Utilisez notre onglet 'Recherche Clients & Prospection' pour générer un message d'accroche personnalisé qui propose une démonstration concrète sans engagement.";
-      } else if (lower.includes("débutant") || lower.includes("expérience")) {
-        reply = "Le manque d'expérience formelle se compense par la preuve concrète : réalisez un projet test (ex: un tableau type, une maquette Canva) que vous insérez dans votre portfolio. Les clients recherchent avant tout quelqu'un de sérieux qui résout leur problème.";
+    try {
+      // Préparer l'historique conversationnel pour le modèle
+      const historyPayload = messages.map((m) => ({
+        role: m.sender === "coach" ? "assistant" : "user",
+        content: m.text,
+      }));
+
+      const response = await fetch("/api/coach-ia", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: userMsg.text,
+          history: historyPayload,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.error || `Erreur serveur (${response.status})`);
       }
 
       setMessages((prev) => [
@@ -195,12 +235,24 @@ Bien cordialement,
         {
           id: (Date.now() + 1).toString(),
           sender: "coach",
-          text: reply,
-          timestamp: new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
+          text: data.text,
+          timestamp: data.timestamp || new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
+          source: data.source,
         },
       ]);
+    } catch (err: any) {
+      console.error("Erreur lors de l'appel au Coach IA:", err);
+      setErrorMessage(
+        err?.message || "Impossible de joindre le Business Coach pour le moment. Veuillez vérifier votre connexion et réessayer."
+      );
+    } finally {
       setIsTyping(false);
-    }, 700);
+    }
+  };
+
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    sendMessageToServer(inputVal);
   };
 
   const copyToClipboard = (text: string) => {
@@ -231,7 +283,7 @@ Bien cordialement,
                 </span>
               </h1>
               <p className="text-xs text-slate-500">
-                Diagnostic de compétences, générateur d'offres, CV pro, prospection & coaching stratégique.
+                Business Coach conversationnel, diagnostic de compétences, calculateur de marge, CV pro & prospection.
               </p>
             </div>
           </div>
@@ -240,7 +292,7 @@ Bien cordialement,
         {/* Badge sécurité IA */}
         <div className="flex items-center gap-2 text-xs text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl">
           <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-          <span>Algorithmes de calcul financiers fiables • Zéro fausses promesses</span>
+          <span>IA Conversationnelle Active • Réponses Réelles & Contextuelles</span>
         </div>
       </div>
 
@@ -276,7 +328,27 @@ Bien cordialement,
       {/* 7.8 Business Coach Conversationnel */}
       {activeModule === "coach" && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[600px]">
+          <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[640px]">
+            {/* Barre de statut du chat avec bouton réinitialisation */}
+            <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between bg-slate-50/70 rounded-t-2xl">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-xs font-bold text-slate-800">Business Coach AfriGain</span>
+                <span className="text-[10px] text-slate-500">
+                  (Français / Anglais • Contexte économique africain & UEMOA)
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleResetConversation}
+                title="Démarrer une nouvelle conversation"
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium text-slate-600 bg-white hover:text-amber-700 hover:border-amber-300 border border-slate-200 rounded-lg transition-colors shadow-2xs"
+              >
+                <RotateCcw className="w-3 h-3 text-slate-500" />
+                Nouvelle conversation
+              </button>
+            </div>
+
             {/* Zone de conversation */}
             <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
               {messages.map((m) => (
@@ -296,46 +368,111 @@ Bien cordialement,
                     {m.sender === "coach" ? <Bot className="w-4 h-4" /> : "VOUS"}
                   </div>
                   <div
-                    className={`p-3.5 rounded-2xl text-xs leading-relaxed space-y-1 ${
+                    className={`p-3.5 rounded-2xl text-xs leading-relaxed space-y-2 ${
                       m.sender === "coach"
-                        ? "bg-amber-50/70 border border-amber-200/60 text-slate-800 rounded-tl-none"
-                        : "bg-brand-600 text-white rounded-tr-none"
+                        ? "bg-amber-50/70 border border-amber-200/60 text-slate-800 rounded-tl-none shadow-2xs"
+                        : "bg-brand-600 text-white rounded-tr-none shadow-2xs"
                     }`}
                   >
                     <p className="whitespace-pre-line">{m.text}</p>
-                    <span
-                      className={`text-[10px] block text-right ${
-                        m.sender === "coach" ? "text-amber-800/60" : "text-white/70"
+                    <div
+                      className={`text-[10px] flex items-center justify-between pt-1 border-t ${
+                        m.sender === "coach"
+                          ? "text-amber-800/60 border-amber-200/50"
+                          : "text-white/70 border-white/20"
                       }`}
                     >
-                      {m.timestamp}
-                    </span>
+                      <span>
+                        {m.sender === "coach" && (
+                          m.source === "external_llm" ? "Modèle IA connecté" : "Assistant Intelligent AfriGain"
+                        )}
+                      </span>
+                      <span>{m.timestamp}</span>
+                    </div>
                   </div>
                 </div>
               ))}
+
               {isTyping && (
-                <div className="flex items-center gap-2 text-xs text-slate-400 pl-11">
-                  <div className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-                  <span>Le Coach analyse votre situation...</span>
+                <div className="flex items-center gap-2 text-xs text-slate-500 pl-11">
+                  <div className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+                  <span>Le Coach analyse votre situation et formule sa réponse...</span>
                 </div>
               )}
+
+              {errorMessage && (
+                <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                    <span>{errorMessage}</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const lastUserMsg = [...messages].reverse().find((m) => m.sender === "user");
+                      if (lastUserMsg) sendMessageToServer(lastUserMsg.text);
+                    }}
+                    className="px-2 py-1 bg-red-100 hover:bg-red-200 text-red-800 font-semibold rounded text-[11px] shrink-0"
+                  >
+                    Réessayer
+                  </button>
+                </div>
+              )}
+
+              <div ref={chatEndRef} />
+            </div>
+
+            {/* Outils complémentaires suggérés par le Coach */}
+            <div className="px-4 py-2 border-t border-slate-100 bg-slate-50/50 flex flex-wrap items-center gap-1.5 text-[11px] text-slate-600">
+              <span className="font-semibold text-slate-700 flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-amber-500" /> Outils 1-clic :
+              </span>
+              <button
+                type="button"
+                onClick={() => setActiveModule("pricing")}
+                className="px-2 py-0.5 rounded-md bg-white border border-slate-200 hover:border-amber-400 hover:text-amber-700 transition-colors"
+              >
+                Calculateur de marge
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveModule("cv_generator")}
+                className="px-2 py-0.5 rounded-md bg-white border border-slate-200 hover:border-amber-400 hover:text-amber-700 transition-colors"
+              >
+                Générateur de CV & Lettres
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveModule("diagnostic")}
+                className="px-2 py-0.5 rounded-md bg-white border border-slate-200 hover:border-amber-400 hover:text-amber-700 transition-colors"
+              >
+                Diagnostic compétences
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveModule("client_finder")}
+                className="px-2 py-0.5 rounded-md bg-white border border-slate-200 hover:border-amber-400 hover:text-amber-700 transition-colors"
+              >
+                Prospection clients
+              </button>
             </div>
 
             {/* Saisie */}
             <form onSubmit={handleSendMessage} className="p-3 border-t border-slate-100 flex gap-2">
               <input
                 type="text"
-                placeholder="Posez votre question (ex: comment tarifer ma première mission, comment approcher un client)..."
+                placeholder="Posez votre question (ex: Bonjour, comment trouver mes premiers clients, comment calculer mon prix...)"
                 value={inputVal}
                 onChange={(e) => setInputVal(e.target.value)}
-                className="flex-1 px-4 py-2.5 border border-slate-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
+                disabled={isTyping}
+                className="flex-1 px-4 py-2.5 border border-slate-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-60"
               />
               <button
                 type="submit"
                 disabled={!inputVal.trim() || isTyping}
-                className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold rounded-xl text-xs flex items-center gap-1 shadow-sm"
+                className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold rounded-xl text-xs flex items-center gap-1 shadow-sm transition-all"
               >
                 <Send className="w-4 h-4" />
+                <span>Envoyer</span>
               </button>
             </form>
           </div>
@@ -345,21 +482,29 @@ Bien cordialement,
             <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
               <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
                 <Sparkles className="w-4 h-4 text-amber-500" />
-                Sujets fréquents d'accompagnement
+                Suggestions & Scénarios fréquents
               </h3>
+              <p className="text-[11px] text-slate-500">
+                Cliquez sur une question pour démarrer l'échange avec le Coach :
+              </p>
               <div className="space-y-2">
                 {[
+                  "Bonjour",
+                  "Je suis étudiant au Bénin. Je veux gagner 5 000 FCFA par jour, mais je n'ai pas de capital.",
+                  "Je veux lancer une activité de vente de vêtements à Cotonou avec un budget de 20 000 FCFA.",
+                  "Quelle est la différence entre le chiffre d'affaires et le bénéfice ?",
+                  "Aide-moi à rédiger un CV professionnel.",
                   "Comment calculer le bon prix pour un client à Cotonou ?",
-                  "Comment rédiger une proposition pour une mission freelance ?",
                   "Quels arguments utiliser face à un client qui hésite ?",
-                  "Comment sécuriser un acompte avant de commencer ?",
                 ].map((promptText, idx) => (
                   <button
                     key={idx}
+                    type="button"
                     onClick={() => {
-                      setInputVal(promptText);
+                      sendMessageToServer(promptText);
                     }}
-                    className="w-full text-left p-2.5 rounded-xl bg-slate-50 hover:bg-amber-50 hover:border-amber-200 border border-slate-200/80 text-xs text-slate-700 transition-colors"
+                    disabled={isTyping}
+                    className="w-full text-left p-2.5 rounded-xl bg-slate-50 hover:bg-amber-50 hover:border-amber-200 border border-slate-200/80 text-xs text-slate-700 transition-colors disabled:opacity-60"
                   >
                     💡 {promptText}
                   </button>
@@ -370,11 +515,11 @@ Bien cordialement,
             <div className="bg-amber-50/60 p-5 rounded-2xl border border-amber-200 shadow-sm text-xs space-y-2 text-slate-700">
               <h4 className="font-bold text-amber-950 flex items-center gap-1">
                 <CheckCircle2 className="w-4 h-4 text-amber-600" />
-                Règles d'or de l'entrepreneur
+                Règles d'or de l'entrepreneur AfriGain
               </h4>
               <p>• Ne démarrez jamais un chantier important sans acompte ni devis validé.</p>
-              <p>• Délimitez exactement ce qui est inclus et ce qui sera facturé en supplément.</p>
-              <p>• Documentez vos réussites pour enrichir votre portfolio après chaque livraison.</p>
+              <p>• Calculez vos coûts réels (temps, transport, forfait internet) avant de fixer un prix.</p>
+              <p>• Validez la demande sur le terrain avant d'engager de gros frais de stock ou de local.</p>
             </div>
           </div>
         </div>
