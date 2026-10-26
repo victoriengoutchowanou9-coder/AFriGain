@@ -16,8 +16,6 @@ import {
   ArrowLeft
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 
 interface Conversation {
   id: string;
@@ -153,10 +151,7 @@ export default function MessagesPage() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-between">
-      <Navbar />
-
-      <main className="max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 flex-1">
+    <div className="max-w-6xl w-full mx-auto px-4 sm:px-6 py-6">
         <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col md:flex-row h-[75vh]">
           {/* 1. Colonne Liste des Conversations */}
           <div className="w-full md:w-80 border-r border-slate-200 flex flex-col bg-slate-50/50">
@@ -329,9 +324,6 @@ export default function MessagesPage() {
             )}
           </div>
         </div>
-      </main>
-
-      <Footer />
     </div>
   );
 }

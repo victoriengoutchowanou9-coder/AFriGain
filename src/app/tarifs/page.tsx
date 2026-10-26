@@ -20,8 +20,6 @@ import {
   DollarSign
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 
 interface PricingPlan {
   id: string;
@@ -270,10 +268,7 @@ export default function TarifsPage() {
   const advertisingPlans = plans.filter((p) => p.category === "advertising");
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-between">
-      <Navbar />
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12 flex-1">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
         {/* En-tête */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 text-brand-800 text-xs font-semibold">
@@ -579,7 +574,6 @@ export default function TarifsPage() {
             • <strong>Zéro simulation fictive :</strong> Vous pouvez pré-commander ou manifester votre intérêt dès maintenant sans jamais être débité. Votre compte de base reste 100% opérationnel et gratuit.
           </p>
         </div>
-      </main>
 
       {/* Modal Demande d'Offre (Sans Faux Paiement) */}
       {selectedPlanForRequest && (
@@ -686,7 +680,6 @@ export default function TarifsPage() {
         </div>
       )}
 
-      <Footer />
     </div>
   );
 }
