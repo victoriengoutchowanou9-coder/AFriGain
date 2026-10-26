@@ -49,6 +49,36 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/challenges" className="hover:text-white transition-colors text-amber-400 font-semibold">
+                  🏆 AfriGain Challenges (Laboratoire de Défis)
+                </Link>
+              </li>
+              <li>
+                <Link href="/collectif" className="hover:text-white transition-colors text-indigo-400 font-semibold">
+                  👥 AfriGain Collectif (Équipes & Projets)
+                </Link>
+              </li>
+              <li>
+                <Link href="/ressources" className="hover:text-white transition-colors text-emerald-400 font-semibold">
+                  📦 AfriGain Ressources (Matériel Partagé)
+                </Link>
+              </li>
+              <li>
+                <Link href="/predict" className="hover:text-white transition-colors text-blue-400 font-semibold">
+                  📈 AfriGain Predict (Tendances du Marché)
+                </Link>
+              </li>
+              <li>
+                <Link href="/impact" className="hover:text-white transition-colors text-purple-400 font-semibold">
+                  🤝 AfriGain Impact (Indicateurs Réels)
+                </Link>
+              </li>
+              <li>
+                <Link href="/dashboard/passport" className="hover:text-white transition-colors text-brand-300 font-semibold">
+                  🎖️ AfriGain Passport (Passeport Évolutif)
+                </Link>
+              </li>
+              <li>
                 <Link href="/opportunites" className="hover:text-white transition-colors">
                   Index des Opportunités Économiques
                 </Link>

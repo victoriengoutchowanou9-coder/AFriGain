@@ -17,10 +17,38 @@ import {
   Hammer, 
   ShoppingBag,
   Sparkles,
-  ShieldCheck
+  ShieldCheck,
+  Tag,
+  Plus,
+  X
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { ALL_COUNTRIES } from "@/lib/constants";
+
+
+const POPULAR_SKILLS = [
+  "Rédaction de textes",
+  "Maîtrise du français",
+  "Création de visuels avec Canva",
+  "Montage vidéo",
+  "Gestion de pages Facebook",
+  "Utilisation de TikTok",
+  "Vente de produits",
+  "Cuisine & Restauration",
+  "Maîtrise d'Excel",
+  "Réparation de téléphones",
+  "Enseignement et soutien scolaire",
+  "Coiffure & Esthétique",
+  "Marketing digital",
+  "Gestion administrative",
+  "Saisie de données",
+  "Développement web & mobile",
+  "Couture & Stylisme",
+  "Électricité & Énergie solaire",
+  "Comptabilité & Finance",
+  "Livraison & Logistique",
+  "Service client & Téléphonie"
+];
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -38,6 +66,32 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [customSkillInput, setCustomSkillInput] = useState("");
+  const [showCustomInput, setShowCustomInput] = useState(false);
+
+  const toggleSkill = (skill: string) => {
+    if (selectedSkills.includes(skill)) {
+      setSelectedSkills(selectedSkills.filter((s) => s !== skill));
+    } else {
+      setSelectedSkills([...selectedSkills, skill]);
+    }
+  };
+
+  const addCustomSkill = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const trimmed = customSkillInput.trim();
+    if (trimmed && !selectedSkills.includes(trimmed)) {
+      setSelectedSkills([...selectedSkills, trimmed]);
+      setCustomSkillInput("");
+      setShowCustomInput(false);
+    }
+  };
+
+  const removeSkill = (skillToRemove: string) => {
+    setSelectedSkills(selectedSkills.filter((s) => s !== skillToRemove));
+  };
+
 
   const handleRoleSelect = (newRole: "entrepreneur" | "client") => {
     setRole(newRole);
@@ -82,6 +136,7 @@ export default function RegisterPage() {
             role: role,
             category: category,
             country: country,
+            skills: selectedSkills,
           },
           emailRedirectTo,
         },
@@ -97,6 +152,12 @@ export default function RegisterPage() {
       }
 
       // Orientation vers confirmation par e-mail
+      if (data?.user?.id && selectedSkills.length > 0) {
+        try {
+          await supabase.from("profiles").update({ skills: selectedSkills }).eq("id", data.user.id);
+        } catch (_) {}
+      }
+
       if (data?.user && !data.session) {
         router.push(`/auth/verify-email?email=${encodeURIComponent(email.trim().toLowerCase())}`);
       } else if (data?.user?.email_confirmed_at) {
@@ -405,6 +466,110 @@ export default function RegisterPage() {
                 />
               </div>
             </div>
+          </div>
+
+
+          {/* Section 1 : Choix autonome des compétences par l'utilisateur */}
+          <div className="space-y-3 bg-slate-50/70 p-4 rounded-2xl border border-slate-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-700 block flex items-center gap-1.5">
+                  <Tag className="w-3.5 h-3.5 text-brand-600" />
+                  Vos compétences clés
+                </label>
+                <p className="text-[11px] text-slate-500">
+                  Choisissez vous-même vos savoir-faire. Vous pourrez les modifier à tout moment.
+                </p>
+              </div>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand-100 text-brand-800">
+                {selectedSkills.length} sélectionnée{selectedSkills.length > 1 ? "s" : ""}
+              </span>
+            </div>
+
+            {/* Aperçu des compétences sélectionnées */}
+            {selectedSkills.length > 0 && (
+              <div className="p-2.5 bg-white rounded-xl border border-brand-200 space-y-1.5">
+                <span className="text-[10px] font-bold text-brand-900 block uppercase tracking-wider">
+                  Compétences qui seront enregistrées dans votre profil :
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedSkills.map((s) => (
+                    <span
+                      key={s}
+                      className="inline-flex items-center gap-1 bg-brand-50 border border-brand-300 text-brand-900 px-2.5 py-0.5 rounded-lg text-xs font-semibold"
+                    >
+                      ✓ {s}
+                      <button
+                        type="button"
+                        onClick={() => removeSkill(s)}
+                        className="text-brand-500 hover:text-brand-800 ml-0.5"
+                        title="Retirer"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Grille de sélection des compétences suggérées */}
+            <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto pr-1">
+              {POPULAR_SKILLS.map((skill) => {
+                const isSelected = selectedSkills.includes(skill);
+                return (
+                  <button
+                    key={skill}
+                    type="button"
+                    onClick={() => toggleSkill(skill)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all flex items-center gap-1 ${
+                      isSelected
+                        ? "bg-brand-600 text-white shadow-sm ring-1 ring-brand-700"
+                        : "bg-white border border-slate-200 text-slate-700 hover:border-brand-300 hover:bg-brand-50/50"
+                    }`}
+                  >
+                    {isSelected && <CheckCircle2 className="w-3 h-3 text-white" />}
+                    {skill}
+                  </button>
+                );
+              })}
+
+              {/* Bouton Autre compétence */}
+              <button
+                type="button"
+                onClick={() => setShowCustomInput(!showCustomInput)}
+                className="px-2.5 py-1 rounded-lg text-xs font-bold border border-dashed border-brand-400 bg-white text-brand-700 hover:bg-brand-50 flex items-center gap-1"
+              >
+                <Plus className="w-3 h-3" />
+                Autre compétence...
+              </button>
+            </div>
+
+            {/* Champ de saisie pour compétence personnalisée */}
+            {showCustomInput && (
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="text"
+                  value={customSkillInput}
+                  onChange={(e) => setCustomSkillInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addCustomSkill();
+                    }
+                  }}
+                  placeholder="Précisez votre compétence..."
+                  className="flex-1 px-3 py-1.5 text-xs border border-brand-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white"
+                />
+                <button
+                  type="button"
+                  onClick={() => addCustomSkill()}
+                  className="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-semibold"
+                >
+                  Ajouter
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-[11px] text-slate-600 flex items-start gap-2">

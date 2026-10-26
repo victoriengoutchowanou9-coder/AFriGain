@@ -605,7 +605,7 @@ export default function TarifsPage() {
                 <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto" />
                 <h4 className="font-bold text-slate-900 text-base">Demande enregistrée !</h4>
                 <p className="text-xs text-slate-500">
-                  Votre demande pour <strong className="text-slate-800">{selectedPlanForRequest.name}</strong> a été enregistrée dans Supabase. Un administrateur vous contactera dès que la passerelle de paiement en ligne sera ouverte.
+                  Votre demande pour <strong className="text-slate-800">{selectedPlanForRequest.name}</strong> a été enregistrée avec succès. Un administrateur vous contactera dès que la passerelle de paiement en ligne sera ouverte.
                 </p>
               </div>
             ) : (

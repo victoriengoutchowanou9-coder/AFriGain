@@ -173,7 +173,7 @@ export default function EmploisPage() {
           company: a.job_posts?.profiles?.company_name || a.job_posts?.profiles?.full_name || "Recruteur",
           appliedDate: new Date(a.created_at).toLocaleDateString("fr-FR"),
           statusId: a.status === "accepted" ? "accepted" : a.status === "shortlisted" ? "shortlisted" : "received",
-          notes: "Candidature enregistrée dans Supabase.",
+          notes: "Candidature enregistrée avec succès.",
         }));
         setMyApplications(appsMapped);
       }
@@ -274,7 +274,7 @@ export default function EmploisPage() {
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold mb-2">
             <Briefcase className="w-3.5 h-3.5 text-emerald-600" />
-            Module Emploi Officiel • Données Vérifiées Supabase
+            Module Emploi Officiel • Informations vérifiées
           </div>
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
             Emplois & Postes Ouverts
@@ -381,7 +381,7 @@ export default function EmploisPage() {
 
           {isLoading ? (
             <div className="py-16 text-center text-xs text-slate-400">
-              Chargement des offres d'emploi réelles depuis Supabase...
+              Chargement des offres d'emploi officielles...
             </div>
           ) : filteredOffers.length === 0 ? (
             <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-3">

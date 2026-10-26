@@ -69,7 +69,7 @@ export default function ServicesPage() {
       const supabase = createClient();
       const { data } = await supabase
         .from("profiles")
-        .select("*")
+        .select("id, full_name, category, headline, bio, city, country, average_rating, completed_missions_count, verification_status, currency, skills, phone, email")
         .eq("role", "entrepreneur")
         .eq("is_active", true)
         .order("created_at", { ascending: false });

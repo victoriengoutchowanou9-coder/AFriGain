@@ -37,7 +37,7 @@ import { createClient } from "@/lib/supabase/client";
 import { ALL_COUNTRIES, IDENTITY_STATUSES, PROFESSIONAL_STATUSES, ACCOUNT_STATUSES } from "@/lib/constants";
 
 export function AdminVerificationConsole() {
-  const [activeTab, setActiveTab] = useState<"dossiers" | "signalements" | "comptes" | "tarifs">("dossiers");
+  const [activeTab, setActiveTab] = useState<"dossiers" | "signalements" | "comptes" | "tarifs" | "studio">("dossiers");
   const [loading, setLoading] = useState(true);
   const [adminUser, setAdminUser] = useState<any>(null);
 
@@ -48,6 +48,62 @@ export function AdminVerificationConsole() {
   const [pricingPlans, setPricingPlans] = useState<any[]>([]);
   const [pricingRequests, setPricingRequests] = useState<any[]>([]);
   const [editingPrices, setEditingPrices] = useState<Record<string, number>>({});
+
+  // AfriGain Admin Studio (Innovation 8 du PDF)
+  const [studioTitle, setStudioTitle] = useState("");
+  const [studioCategory, setStudioCategory] = useState("Emploi & Opportunités");
+  const [studioContent, setStudioContent] = useState("");
+  const [studioTargetCountry, setStudioTargetCountry] = useState("all");
+  const [studioMediaUrl, setStudioMediaUrl] = useState("");
+  const [isFeatured, setIsFeatured] = useState(false);
+  const [studioSubmitting, setStudioSubmitting] = useState(false);
+  const [officialPosts, setOfficialPosts] = useState<any[]>([]);
+
+  const loadOfficialPosts = async () => {
+    try {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("posts")
+        .select("*, profiles:author_id(full_name, role)")
+        .eq("post_type", "official")
+        .order("created_at", { ascending: false });
+      if (data) setOfficialPosts(data);
+    } catch (_) {}
+  };
+
+  const handlePublishStudio = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!studioContent.trim()) return;
+    setStudioSubmitting(true);
+    try {
+      const supabase = createClient();
+      const { data: authData } = await supabase.auth.getUser();
+      if (!authData?.user) throw new Error("Non connecté.");
+
+      const fullText = studioTitle ? `[${studioCategory.toUpperCase()}] ${studioTitle}\n\n${studioContent}` : studioContent;
+
+      const { error } = await supabase.from("posts").insert({
+        author_id: authData.user.id,
+        content: fullText,
+        post_type: "official",
+        media_urls: studioMediaUrl ? [studioMediaUrl] : [],
+        likes_count: 0,
+        comments_count: 0
+      });
+
+      if (error) throw error;
+
+      setFeedback({ type: "success", text: "Publication officielle publiée sur le fil AfriGain avec succès !" });
+      setStudioTitle("");
+      setStudioContent("");
+      setStudioMediaUrl("");
+      await loadOfficialPosts();
+    } catch (err: any) {
+      setFeedback({ type: "error", text: err?.message || "Erreur lors de la publication." });
+    } finally {
+      setStudioSubmitting(false);
+    }
+  };
 
 
   // Filtres
@@ -89,6 +145,7 @@ export function AdminVerificationConsole() {
         setDossiers(pendingOrSubmitted.length > 0 ? pendingOrSubmitted : profilesData);
       }
 
+      await loadOfficialPosts();
       // 2. Charger les signalements de fraude
       const { data: reportsData } = await supabase
         .from("fraud_reports")
@@ -227,7 +284,7 @@ export function AdminVerificationConsole() {
         .eq("id", planId);
 
       if (!error) {
-        setFeedback({ type: "success", text: "Tarif mis à jour avec succès dans Supabase !" });
+        setFeedback({ type: "success", text: "Tarif mis à jour avec succès !" });
         loadAdminData();
       } else {
         setFeedback({ type: "error", text: "Erreur mise à jour : " + error.message });
@@ -399,6 +456,19 @@ export function AdminVerificationConsole() {
           <DollarSign className="w-4 h-4" />
           Gestion des Tarifs & Demandes ({pricingPlans.length})
         </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("studio")}
+          className={`pb-3 font-bold text-sm border-b-2 transition-all flex items-center gap-2 ${
+            activeTab === "studio"
+              ? "border-purple-600 text-purple-700"
+              : "border-transparent text-slate-500 hover:text-slate-800"
+          }`}
+        >
+          <Sparkles className="w-4 h-4" />
+          AfriGain Admin Studio
+        </button>
+
       </div>
 
       {/* 1. ONGLET : DOSSIERS DE VÉRIFICATION (Section 12) */}
@@ -677,7 +747,7 @@ export function AdminVerificationConsole() {
                   Formules Tarifaires & Tarifs de Lancement
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Modifiez les prix directement en base de données Supabase sans toucher au code source.
+                  Modifiez les prix directement en base de données sécurisée sans toucher au code source.
                 </p>
               </div>
               <span className="text-xs font-bold text-amber-700 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">

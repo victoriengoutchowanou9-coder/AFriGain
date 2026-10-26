@@ -64,7 +64,7 @@ export default function EntreprisesPage() {
       const supabase = createClient();
       const { data } = await supabase
         .from("profiles")
-        .select("*")
+        .select("id, full_name, company_name, category, business_sector, headline, bio, city, country, verification_status, skills, company_gallery_urls, phone, email")
         .in("role", ["client", "partner"])
         .eq("is_active", true)
         .order("created_at", { ascending: false });

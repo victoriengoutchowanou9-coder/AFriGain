@@ -101,6 +101,14 @@ export default function DashboardPage() {
         {/* Sélecteur de rôle adaptatif (Section 18) - Le rôle admin n'apparaît que si l'utilisateur est authentifié comme admin */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
           <Link
+            href="/dashboard/settings"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-xs font-bold transition-all shadow-sm"
+          >
+            <Settings className="w-4 h-4 text-slate-300" />
+            <span>Paramètres</span>
+          </Link>
+
+          <Link
             href="/dashboard/verification"
             className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-2xl text-xs font-bold transition-all shadow-sm"
           >
@@ -165,12 +173,22 @@ export default function DashboardPage() {
             <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
               <span className="text-xs font-bold text-slate-400 uppercase block">Mes Compétences Déclarées</span>
               <div className="flex flex-wrap gap-1.5">
-                {["Bureautique Excel", "Canva", "SYSCOHADA", "Relation client WhatsApp", "Rédaction"].map((s, idx) => (
-                  <span key={idx} className="bg-slate-50 border border-slate-200 text-slate-700 px-2 py-0.5 rounded text-[11px] font-medium">
-                    ✓ {s}
-                  </span>
-                ))}
+                {userProfile?.skills && userProfile.skills.length > 0 ? (
+                  userProfile.skills.map((s: string, idx: number) => (
+                    <span key={idx} className="bg-slate-50 border border-slate-200 text-slate-700 px-2 py-0.5 rounded text-[11px] font-medium">
+                      ✓ {s}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-xs text-slate-400 italic">Aucune compétence sélectionnée.</span>
+                )}
               </div>
+              <Link
+                href="/dashboard/settings"
+                className="text-xs font-bold text-brand-600 hover:text-brand-700 inline-flex items-center gap-1 pt-1"
+              >
+                <Settings className="w-3.5 h-3.5" /> Gérer mes compétences
+              </Link>
               <Link
                 href="/dashboard/coach-ia"
                 className="text-xs font-bold text-amber-600 hover:text-amber-700 inline-flex items-center gap-1 pt-1"
