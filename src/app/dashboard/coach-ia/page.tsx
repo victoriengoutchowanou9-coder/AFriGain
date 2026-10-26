@@ -27,6 +27,7 @@ import {
   RefreshCw
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import CvGeneratorModule from "@/components/cv-generator/CvGeneratorModule";
 
 interface ChatMessage {
   id: string;
@@ -61,6 +62,7 @@ export default function BusinessCoachIAPage() {
   const [inputVal, setInputVal] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [copiedNotice, setCopiedNotice] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll chat to bottom
@@ -133,35 +135,7 @@ export default function BusinessCoachIAPage() {
     });
   };
 
-  // 4. Générateur de CV & Lettres (Section 7.4)
-  const [cvForm, setCvForm] = useState({
-    fullName: "Koffi Mensah",
-    title: "Assistant Administratif & Commercial Junior",
-    email: "koffi.mensah@email.com",
-    phone: "+229 97 00 00 00",
-    city: "Cotonou, Bénin",
-    summary: "Jeune professionnel rigoureux et motivé, maîtrisant la gestion de registres Excel, la communication client et les outils numériques modernes. Disponible immédiatement.",
-    skillsText: "Excel, SYSCOHADA (notions), Rédaction professionnelle, Gestion de stock, Canva, WhatsApp Business",
-    projectDemo: "Mise en place d'un modèle automatisé de gestion des entrées/sorties de stock pour une épicerie locale.",
-  });
-  const [generatedLetter, setGeneratedLetter] = useState<string>("");
-  const [copiedNotice, setCopiedNotice] = useState(false);
-
-  const generateCoverLetter = () => {
-    setGeneratedLetter(`Madame, Monsieur le Responsable des Recrutements,
-
-Je vous adresse ma candidature pour rejoindre votre équipe en tant que ${cvForm.title}.
-
-Résidant à ${cvForm.city}, je dispose d'une solide maîtrise pratique des outils bureautiques et organisationnels, notamment : ${cvForm.skillsText}. 
-Conscient des exigences de rigueur de votre structure, j'ai notamment eu l'opportunité de réaliser un projet concret : "${cvForm.projectDemo}".
-
-Dynamique, ponctuel et désireux de contribuer activement à vos opérations quotidiennes, je serais honoré d'échanger avec vous lors d'un entretien pour vous présenter mes démonstrations concrètes.
-
-Dans l'attente de votre retour, je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations respectueuses.
-
-${cvForm.fullName}
-${cvForm.phone} • ${cvForm.email}`);
-  };
+  // 4. Générateur Professionnel de CV & Lettres (Module dédié CvGeneratorModule)
 
   // 5. Générateur de Prospection Commerciale (Section 7.6)
   const [prospectTarget, setProspectTarget] = useState("Restaurants et Maquis de Cotonou");
@@ -668,159 +642,8 @@ Bien cordialement,
         </div>
       )}
 
-      {/* 7.4 Générateur de CV & Lettres de motivation */}
-      {activeModule === "cv_generator" && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-            <div>
-              <span className="text-[11px] font-bold text-amber-600 uppercase">Générateur Professionnel (Section 7.4)</span>
-              <h3 className="text-lg font-bold text-slate-900">Créer mon CV & ma Lettre</h3>
-              <p className="text-xs text-slate-500">
-                Sans inventer de diplôme ou d'expérience, mettez en valeur vos compétences réelles selon les normes en vigueur.
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Nom complet</label>
-                  <input
-                    type="text"
-                    value={cvForm.fullName}
-                    onChange={(e) => setCvForm({ ...cvForm, fullName: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Titre visé</label>
-                  <input
-                    type="text"
-                    value={cvForm.title}
-                    onChange={(e) => setCvForm({ ...cvForm, title: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Email</label>
-                  <input
-                    type="email"
-                    value={cvForm.email}
-                    onChange={(e) => setCvForm({ ...cvForm, email: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Téléphone / WhatsApp</label>
-                  <input
-                    type="tel"
-                    value={cvForm.phone}
-                    onChange={(e) => setCvForm({ ...cvForm, phone: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Accroche professionnelle</label>
-                <textarea
-                  rows={2}
-                  value={cvForm.summary}
-                  onChange={(e) => setCvForm({ ...cvForm, summary: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Compétences maîtrisées</label>
-                <input
-                  type="text"
-                  value={cvForm.skillsText}
-                  onChange={(e) => setCvForm({ ...cvForm, skillsText: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Projet / Démonstration concrète déjà réalisé</label>
-                <input
-                  type="text"
-                  value={cvForm.projectDemo}
-                  onChange={(e) => setCvForm({ ...cvForm, projectDemo: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs"
-                />
-              </div>
-
-              <div className="flex gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={generateCoverLetter}
-                  className="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-sm transition-colors"
-                >
-                  Rédiger ma Lettre de motivation sur-mesure
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Prévisualisation & Export (Section 7.4) */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4 flex flex-col justify-between">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 className="text-sm font-bold text-slate-900">Aperçu du Document Professionnel</h3>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => copyToClipboard(generatedLetter || `${cvForm.fullName}\n${cvForm.title}\n${cvForm.summary}`)}
-                    className="p-1.5 text-slate-500 hover:text-slate-800 rounded border border-slate-200"
-                    title="Copier le texte"
-                  >
-                    <Copy className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => window.print()}
-                    className="p-1.5 text-slate-500 hover:text-slate-800 rounded border border-slate-200"
-                    title="Imprimer / Enregistrer PDF"
-                  >
-                    <Printer className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              {copiedNotice && (
-                <div className="text-[11px] font-bold text-emerald-700 bg-emerald-50 p-2 rounded border border-emerald-200">
-                  ✓ Texte copié dans votre presse-papier !
-                </div>
-              )}
-
-              {/* Rendu Document */}
-              <div className="p-5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-mono whitespace-pre-wrap leading-relaxed text-slate-800 max-h-[400px] overflow-y-auto">
-                {generatedLetter ? (
-                  generatedLetter
-                ) : (
-                  <div>
-                    <h2 className="text-base font-bold text-slate-900 font-sans">{cvForm.fullName}</h2>
-                    <p className="text-xs text-amber-700 font-sans font-semibold">{cvForm.title}</p>
-                    <p className="text-[11px] text-slate-500 font-sans">{cvForm.city} • {cvForm.phone} • {cvForm.email}</p>
-                    <hr className="my-3 border-slate-300" />
-                    <p className="font-sans font-bold text-slate-800">PROFIL & OBJECTIF :</p>
-                    <p className="font-sans text-slate-600 mb-3">{cvForm.summary}</p>
-                    <p className="font-sans font-bold text-slate-800">COMPÉTENCES OPÉRATIONNELLES :</p>
-                    <p className="font-sans text-slate-600 mb-3">{cvForm.skillsText}</p>
-                    <p className="font-sans font-bold text-slate-800">RÉALISATIONS CONCRÈTES :</p>
-                    <p className="font-sans text-slate-600">{cvForm.projectDemo}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <p className="text-[10px] text-slate-400 text-center pt-2">
-              Modèle conforme aux standards de recrutement UEMOA et international.
-            </p>
-          </div>
-        </div>
-      )}
+      {/* 7.4 Générateur Professionnel de CV & Lettres de motivation */}
+      {activeModule === "cv_generator" && <CvGeneratorModule />}
 
       {/* 7.6 Prospection Commerciale & Recherche de Clients */}
       {activeModule === "client_finder" && (

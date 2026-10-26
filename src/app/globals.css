@@ -12,3 +12,61 @@ body {
   background-color: rgb(var(--background-rgb));
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
+
+/* ========================================================== */
+/* STYLES D'IMPRESSION & EXPORT PDF PROFESSIONNEL            */
+/* ========================================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm 10mm 10mm 10mm;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Masquer les éléments de navigation, barres d'outils et formulaires */
+  header,
+  nav,
+  footer,
+  aside,
+  button,
+  input,
+  textarea,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Si le document CV ou Lettre est présent, l'isoler proprement */
+  #cv-printable-document,
+  #letter-printable-document {
+    display: block !important;
+    visibility: visible !important;
+    position: relative !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    page-break-inside: auto;
+  }
+
+  #cv-printable-document * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Éviter les coupures de blocs au milieu d'une expérience */
+  .break-inside-avoid,
+  #cv-printable-document .space-y-3 > div,
+  #cv-printable-document .space-y-2 > div {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+}
